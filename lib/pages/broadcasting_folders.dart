@@ -1,4 +1,4 @@
-import 'package:filesync/models/broadcasting_folder.dart';
+import 'package:filesync/models/database.dart';
 import 'package:filesync/widgets/broadcasting_folder_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,15 +10,19 @@ class BroadcastingFoldersPageWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    List<BroadcastingFolder> folders = ref.watch(
-      broadcastingFolderListProvider,
-    );
+    final foldersAsync = ref.watch(broadcastingFoldersProvider);
+    final folders = foldersAsync.value;
     return Center(
       child: ListView(
         padding: const EdgeInsets.all(10),
-        shrinkWrap: folders.isEmpty,
+        shrinkWrap: folders == null || folders.isEmpty,
         children: [
-          if (folders.isEmpty)
+          if (folders == null)
+            const Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(),
+            )
+          else if (folders.isEmpty)
             const Text(
               'Currently not broadcasting any folder.',
               textAlign: TextAlign.center,
@@ -26,9 +30,10 @@ class BroadcastingFoldersPageWidget extends ConsumerWidget {
                 color: Colors.black54,
                 fontStyle: FontStyle.italic,
               ),
-            ),
-          for (BroadcastingFolder folder in folders)
-            BroadcastingFolderWidget(folder: folder),
+            )
+          else
+            for (BroadcastingFolder folder in folders)
+              BroadcastingFolderWidget(folder: folder),
         ],
       ),
     );

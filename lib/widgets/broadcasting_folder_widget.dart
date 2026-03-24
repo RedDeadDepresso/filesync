@@ -1,4 +1,4 @@
-import 'package:filesync/models/broadcasting_folder.dart';
+import 'package:filesync/models/database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
