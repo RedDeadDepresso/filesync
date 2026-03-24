@@ -3,15 +3,12 @@ import 'package:flutter/material.dart';
 /// An app page.
 enum AppPage {
   /// "Discoveries" page.
-  discoveries(
-    icon: Icons.search,
-    label: 'Discoveries',
-  ),
+  nearbyDevices(icon: Icons.smartphone, label: 'Nearby Devices'),
 
   /// "Broadcasts" page.
-  broadcasts(
+  broadcastingFolders(
     icon: Icons.wifi_tethering,
-    label: 'Broadcasts',
+    label: 'Broadcasting Folders',
   );
 
   /// The page icon.
@@ -21,8 +18,5 @@ enum AppPage {
   final String label;
 
   /// Creates a new app page instance.
-  const AppPage({
-    required this.icon,
-    required this.label,
-  });
+  const AppPage({required this.icon, required this.label});
 }

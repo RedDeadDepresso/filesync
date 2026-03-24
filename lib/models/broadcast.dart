@@ -17,7 +17,7 @@ class BonsoirBroadcastServiceListNotifier
   @override
   List<BonsoirService> build() {
     DefaultAppService.initialize().then(
-      (defaultAppService) => state = [DefaultAppService.service],
+      (device) => state = [DefaultAppService.service],
     );
     return [];
   }

@@ -12,15 +12,11 @@ class ServiceWidget extends ConsumerWidget {
   final Widget? trailing;
 
   /// Creates a new service widget.
-  const ServiceWidget({
-    super.key,
-    required this.service,
-    this.trailing,
-  });
+  const ServiceWidget({super.key, required this.service, this.trailing});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    String subtitle = 'Type : ${service.type}';
+    String subtitle = '';
     for (MapEntry<String, String> entry in service.attributes.entries) {
       String key = entry.key;
       if (key == DefaultAppService.attributeOs) {
@@ -28,16 +24,23 @@ class ServiceWidget extends ConsumerWidget {
       } else if (key == DefaultAppService.attributeUuid) {
         key = 'UUID';
       }
-      subtitle += ', $key : ${entry.value}';
+      subtitle += '${subtitle.isEmpty ? '' : ', '}$key : ${entry.value}';
     }
 
     if (service.host != null) {
       subtitle += '\nHost : ${service.host}, port : ${service.port}';
     }
 
+    IconData iconData = switch (DefaultAppService.attributeOs) {
+      'Android' => Icons.android,
+      'iOS' || 'macOS' => Icons.apple,
+      'Windows' || 'Linux' => Icons.monitor,
+      _ => Icons.wifi,
+    };
+
     return Card(
       child: ListTile(
-        leading: const Icon(Icons.wifi),
+        leading: Icon(iconData),
         title: Text(service.name),
         subtitle: Text(subtitle),
         trailing: trailing,

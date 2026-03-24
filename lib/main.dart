@@ -1,7 +1,6 @@
 import 'package:filesync/models/app_service.dart';
-import 'package:filesync/pages/broadcasts.dart';
-import 'package:filesync/pages/discoveries.dart';
-import 'package:filesync/pages/pages.dart';
+import 'package:filesync/pages/broadcasting_folders.dart';
+import 'package:filesync/pages/nearby_devices.dart';
 import 'package:filesync/widgets/add_icon.dart';
 import 'package:filesync/widgets/bottom_bar.dart';
 import 'package:filesync/widgets/eager_initialization.dart';
@@ -19,13 +18,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DefaultAppService.initialize();
-  runApp(const ProviderScope(child: BonsoirExampleMainWidget()));
+  runApp(const ProviderScope(child: FileSyncMainWidget()));
 }
 
 /// The main widget.
-class BonsoirExampleMainWidget extends StatelessWidget {
+class FileSyncMainWidget extends StatelessWidget {
   /// Creates a new main widget instance.
-  const BonsoirExampleMainWidget({super.key});
+  const FileSyncMainWidget({super.key});
 
   @override
   Widget build(BuildContext context) =>
@@ -41,7 +40,7 @@ class _Scaffold extends StatefulWidget {
 /// The scaffold state.
 class _ScaffoldState extends State<_Scaffold> {
   /// The current page.
-  late int currentPageIndex = 1;
+  late int currentPageIndex = 0;
 
   /// The page controller.
   late final PageController pageController = PageController(
@@ -51,13 +50,16 @@ class _ScaffoldState extends State<_Scaffold> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('Bonsoir demo'),
-      actions: [AddIcon(currentPage: AppPage.values[currentPageIndex])],
+      title: const Text('FileSync'),
+      actions: currentPageIndex == 1 ? [AddIcon()] : [],
       centerTitle: false,
     ),
     body: PageView(
       controller: pageController,
-      children: const [DiscoveriesPageWidget(), BroadcastsPageWidget()],
+      children: const [
+        NearbyDevicesPageWidget(),
+        BroadcastingFoldersPageWidget(),
+      ],
     ),
     bottomNavigationBar: BottomBar(
       currentIndex: currentPageIndex,

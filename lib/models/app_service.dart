@@ -2,28 +2,22 @@ import 'dart:io';
 
 import 'package:bonsoir/bonsoir.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:uuid/data.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter_udid/flutter_udid.dart';
 
 /// Allows to get the Bonsoir service corresponding to the current device.
 class DefaultAppService {
-  /// The service type name.
-  static const String type = 'bonsoirdemo';
-
-  /// The service type.
-  static const String protocol = 'tcp';
-
-  /// The service port (in this example we're not doing anything on that port, but you should).
-  static const int port = 4000;
-
   /// The "OS" attribute.
   static const String attributeOs = 'os';
 
   /// The "UUID" attribute.
   static const String attributeUuid = 'uuid';
 
+  /// The "service type" attribute
+  static const String serviceType = '_filesync._tcp';
+
   /// The default app service.
   static late BonsoirService _service;
+  static late BonsoirBroadcast broadcast;
 
   /// Returns the default app service instance.
   static BonsoirService get service => _service;
@@ -52,16 +46,16 @@ class DefaultAppService {
       name = 'Flutter';
       os = 'Unknown';
     }
-    name += ' Bonsoir Demo';
 
     _service = BonsoirService(
       name: name,
-      type: '_$type._$protocol',
-      port: port,
-      attributes: {
-        attributeOs: os,
-        attributeUuid: const Uuid().v6(config: V6Options(null, null, null, null, name.codeUnits)),
-      },
+      type: serviceType,
+      port: 4000,
+      attributes: {attributeOs: os, attributeUuid: await FlutterUdid.udid},
     );
+
+    // broadcast = BonsoirBroadcast(service: _service);
+    // await broadcast.initialize();
+    // await broadcast.start();
   }
 }

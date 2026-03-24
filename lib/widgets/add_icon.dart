@@ -1,42 +1,24 @@
-import 'package:bonsoir/bonsoir.dart';
-import 'package:filesync/dialogs/broadcast_prompt.dart';
-import 'package:filesync/dialogs/discovery_prompt.dart';
-import 'package:filesync/models/broadcast.dart';
-import 'package:filesync/models/discovery.dart';
-import 'package:filesync/pages/pages.dart';
+import 'package:filesync/dialogs/folder_prompt.dart';
+import 'package:filesync/models/broadcasting_folder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Adds a broadcast or a discovery.
 class AddIcon extends ConsumerWidget {
-  /// The current page.
-  final AppPage currentPage;
-
   /// Creates a new "Add" icon instance.
-  const AddIcon({
-    super.key,
-    required this.currentPage,
-  });
+  const AddIcon({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => IconButton(
     onPressed: () async {
-      switch (currentPage) {
-        case AppPage.discoveries:
-          String? type = await DiscoveryPromptDialog.prompt(context);
-          if (type != null) {
-            ref.read(discoveryTypeListProvider.notifier).add(type);
-          }
-          break;
-        case AppPage.broadcasts:
-          BonsoirService? service = await BroadcastPromptDialog.prompt(context);
-          if (service != null) {
-            ref.read(broadcastServiceListProvider.notifier).add(service);
-          }
-          break;
+      (String, String)? result = await FolderPromptDialog.prompt(context);
+      if (result != null && result.$1 != '' && result.$2 != '') {
+        ref
+            .read(broadcastingFolderListProvider.notifier)
+            .add(BroadcastingFolder(result.$1, result.$2));
       }
     },
     icon: const Icon(Icons.add),
-    tooltip: 'Add a ${currentPage == AppPage.discoveries ? 'discovery' : 'broadcast'}',
+    tooltip: 'Add folder',
   );
 }
