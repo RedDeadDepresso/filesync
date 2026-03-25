@@ -1,4 +1,5 @@
 import 'package:filesync/models/app_service.dart';
+import 'package:filesync/models/server.dart';
 import 'package:filesync/pages/broadcasting_folders.dart';
 import 'package:filesync/pages/nearby_devices.dart';
 import 'package:filesync/widgets/add_icon.dart';
@@ -18,6 +19,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DefaultAppService.initialize();
+  startBackgroundServer();
   runApp(const ProviderScope(child: FileSyncMainWidget()));
 }
 

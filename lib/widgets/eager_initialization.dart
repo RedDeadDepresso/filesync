@@ -1,5 +1,3 @@
-import 'package:filesync/models/broadcast.dart';
-import 'package:filesync/models/database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,7 +13,6 @@ class EagerInitialization extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Eagerly initialize providers by watching them.
     // By using "watch", the provider will stay alive and not be disposed.
-    ref.watch(broadcastServiceListProvider);
     return child;
   }
 }

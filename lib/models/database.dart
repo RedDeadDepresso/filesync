@@ -49,10 +49,10 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
+final db = AppDatabase();
+
 // This creates a single instance of your database
 final databaseProvider = Provider<AppDatabase>((ref) {
-  final db = AppDatabase();
-
   // Clean up the database when the provider is destroyed
   ref.onDispose(() => db.close());
 

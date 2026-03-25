@@ -12,7 +12,8 @@ class NearbyDevicesPageWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Center(
+    return Padding(
+      padding: const EdgeInsets.all(10),
       child: _DiscoveryTypeWidget(type: DefaultAppService.serviceType),
     );
   }
@@ -62,38 +63,26 @@ class _DiscoveryTypeWidgetState extends ConsumerState<_DiscoveryTypeWidget>
     AsyncValue<BonsoirDiscoveryState> discoveryState = ref.watch(
       discoveryTypeStateProvider(widget.type),
     );
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    if (discoveryState.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(10),
+        child: CircularProgressIndicator(),
+      );
+    } else if (!discoveryState.hasValue) {
+      return Center(
+        child: Card(
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(10),
+            leading: const CircularProgressIndicator(),
+            title: Text('Searching for devices nearby...'),
+          ),
+        ),
+      );
+    }
+    return ListView(
       children: [
-        if (discoveryState.isLoading)
-          const Padding(
-            padding: EdgeInsets.all(20),
-            child: CircularProgressIndicator(),
-          )
-        else if (!discoveryState.hasValue ||
-            discoveryState.value!.services.length <= 1)
-          Card(
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(20),
-              leading: const CircularProgressIndicator(),
-              title: Text('Searching for devices nearby...'),
-            ),
-          )
-        else
-          for (BonsoirService service in discoveryState.value!.services)
-            if (service.attributes['attributeUuid'] !=
-                DefaultAppService.service.attributes['attributeUuid'])
-              ServiceWidget(
-                service: service,
-                trailing: service.host == null
-                    ? TextButton(
-                        child: const Text('Resolve'),
-                        onPressed: () => service.resolve(
-                          discoveryState.value!.serviceResolver,
-                        ),
-                      )
-                    : null,
-              ),
+        for (BonsoirService service in discoveryState.value!.services)
+          ServiceWidget(service: service),
       ],
     );
   }

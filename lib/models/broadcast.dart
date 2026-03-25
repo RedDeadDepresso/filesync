@@ -16,10 +16,7 @@ class BonsoirBroadcastServiceListNotifier
     extends Notifier<List<BonsoirService>> {
   @override
   List<BonsoirService> build() {
-    DefaultAppService.initialize().then(
-      (device) => state = [DefaultAppService.service],
-    );
-    return [];
+    return [DefaultAppService.service];
   }
 
   /// Adds a service to the list.

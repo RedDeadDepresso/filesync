@@ -4,31 +4,6 @@ import 'package:bonsoir/bonsoir.dart';
 import 'package:filesync/utils/sort.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// The discovery service list provider.
-final discoveryTypeListProvider =
-    NotifierProvider.autoDispose<
-      BonsoirDiscoveryTypeListNotifier,
-      List<String>
-    >(BonsoirDiscoveryTypeListNotifier.new);
-
-/// The discovery service list notifier.
-class BonsoirDiscoveryTypeListNotifier extends Notifier<List<String>> {
-  @override
-  List<String> build() => [];
-
-  /// Adds a type to the list.
-  void add(String type) {
-    state = [...state, type];
-  }
-
-  /// Removes a type from the list.
-  void remove(String type) {
-    state = [
-      for (String current in state)
-        if (current != type) current,
-    ];
-  }
-}
 
 /// The discovery service state provider.
 final discoveryTypeStateProvider = AsyncNotifierProvider.autoDispose

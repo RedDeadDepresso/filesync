@@ -17,10 +17,13 @@ class DefaultAppService {
 
   /// The default app service.
   static late BonsoirService _service;
-  static late BonsoirBroadcast broadcast;
+  static late BonsoirBroadcast _broadcast;
+  static late BonsoirDiscovery _discovery;
 
   /// Returns the default app service instance.
   static BonsoirService get service => _service;
+  static BonsoirBroadcast get broadcast => _broadcast;
+  static BonsoirDiscovery get discovery => _discovery;
 
   /// Initializes the Bonsoir service instance.
   static Future initialize() async {
@@ -54,8 +57,12 @@ class DefaultAppService {
       attributes: {attributeOs: os, attributeUuid: await FlutterUdid.udid},
     );
 
-    // broadcast = BonsoirBroadcast(service: _service);
-    // await broadcast.initialize();
-    // await broadcast.start();
+    _broadcast = BonsoirBroadcast(service: _service);
+    await _broadcast.initialize();
+    await _broadcast.start();
+
+    // _discovery = BonsoirDiscovery(type: serviceType);
+    // await discovery.initialize();
+    // await _discovery.start();
   }
 }
