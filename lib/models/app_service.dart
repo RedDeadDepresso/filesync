@@ -18,12 +18,12 @@ class DefaultAppService {
   /// The default app service.
   static late BonsoirService _service;
   static late BonsoirBroadcast _broadcast;
-  static late BonsoirDiscovery _discovery;
+  // static late BonsoirDiscovery _discovery;
 
   /// Returns the default app service instance.
   static BonsoirService get service => _service;
   static BonsoirBroadcast get broadcast => _broadcast;
-  static BonsoirDiscovery get discovery => _discovery;
+  // static BonsoirDiscovery get discovery => _discovery;
 
   /// Initializes the Bonsoir service instance.
   static Future initialize() async {

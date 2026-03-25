@@ -1,6 +1,5 @@
 import 'package:bonsoir/bonsoir.dart';
 import 'package:filesync/models/app_service.dart';
-import 'package:filesync/pages/nearby_device.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,12 +40,12 @@ class ServiceWidget extends ConsumerWidget {
 
     return Card(
       child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => NearbyDevicePageWidget(service: service),
-          ),
-        ),
+        // onTap: () => Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => NearbyDevicePageWidget(service: service),
+        //   ),
+        // ),
         child: ListTile(
           leading: Icon(iconData),
           title: Text(service.name),

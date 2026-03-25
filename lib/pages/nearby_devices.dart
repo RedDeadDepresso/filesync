@@ -68,7 +68,8 @@ class _DiscoveryTypeWidgetState extends ConsumerState<_DiscoveryTypeWidget>
         padding: EdgeInsets.all(10),
         child: CircularProgressIndicator(),
       );
-    } else if (!discoveryState.hasValue) {
+    } else if (!discoveryState.hasValue ||
+        discoveryState.value!.services.length <= 1) {
       return Center(
         child: Card(
           child: ListTile(
@@ -82,7 +83,9 @@ class _DiscoveryTypeWidgetState extends ConsumerState<_DiscoveryTypeWidget>
     return ListView(
       children: [
         for (BonsoirService service in discoveryState.value!.services)
-          ServiceWidget(service: service),
+          if (service.attributes['attributeUuid'] !=
+              DefaultAppService.service.attributes['attributeUuid'])
+            ServiceWidget(service: service),
       ],
     );
   }
