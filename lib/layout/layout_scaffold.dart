@@ -43,11 +43,6 @@ class LayoutScaffold extends StatelessWidget {
     } else {
       // Bottom navigation layout
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('FileSync'),
-          centerTitle: false,
-          actions: navigationShell.currentIndex == 1 ? [AddIcon()] : [],
-        ),
         body: navigationShell,
         bottomNavigationBar: NavigationBar(
           selectedIndex: navigationShell.currentIndex,

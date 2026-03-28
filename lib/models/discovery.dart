@@ -4,7 +4,6 @@ import 'package:bonsoir/bonsoir.dart';
 import 'package:filesync/utils/sort.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 /// The discovery service state provider.
 final discoveryTypeStateProvider = AsyncNotifierProvider.autoDispose
     .family<BonsoirDiscoveryTypeStateNotifier, BonsoirDiscoveryState, String>(
@@ -77,6 +76,7 @@ class BonsoirDiscoveryTypeStateNotifier
             serviceResolver: state.serviceResolver,
           ),
         );
+        event.service.resolve(state.serviceResolver);
         break;
       case BonsoirDiscoveryServiceResolvedEvent():
         onUpdate(event.service);

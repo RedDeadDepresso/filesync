@@ -1,7 +1,9 @@
 import 'package:bonsoir/bonsoir.dart';
 import 'package:filesync/models/app_service.dart';
+import 'package:filesync/router/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Allows to display a discovered service.
 class ServiceWidget extends ConsumerWidget {
@@ -11,8 +13,15 @@ class ServiceWidget extends ConsumerWidget {
   /// The trailing widget.
   final Widget? trailing;
 
+  final bool navigate;
+
   /// Creates a new service widget.
-  const ServiceWidget({super.key, required this.service, this.trailing});
+  const ServiceWidget({
+    super.key,
+    required this.service,
+    this.trailing,
+    this.navigate = true,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,14 +47,21 @@ class ServiceWidget extends ConsumerWidget {
       _ => Icons.wifi,
     };
 
-    return Card(
-      child: InkWell(
-        // onTap: () => Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => NearbyDevicePageWidget(service: service),
-        //   ),
-        // ),
+    if (navigate) {
+      return Card(
+        child: InkWell(
+          onTap: () => context.push(Routes.nestedNearbyDevice, extra: service),
+          child: ListTile(
+            leading: Icon(iconData),
+            title: Text(service.name),
+            subtitle: Text(subtitle),
+            trailing: trailing,
+            isThreeLine: true,
+          ),
+        ),
+      );
+    } else {
+      return Card(
         child: ListTile(
           leading: Icon(iconData),
           title: Text(service.name),
@@ -53,7 +69,7 @@ class ServiceWidget extends ConsumerWidget {
           trailing: trailing,
           isThreeLine: true,
         ),
-      ),
-    );
+      );
+    }
   }
 }

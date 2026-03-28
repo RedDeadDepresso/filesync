@@ -12,9 +12,12 @@ class NearbyDevicesPageWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: _DiscoveryTypeWidget(type: DefaultAppService.serviceType),
+    return Scaffold(
+      appBar: AppBar(title: Text("Nearby Devices")),
+      body: Padding(
+        padding: const EdgeInsets.all(10),
+        child: _DiscoveryTypeWidget(type: DefaultAppService.serviceType),
+      ),
     );
   }
 }
@@ -83,8 +86,6 @@ class _DiscoveryTypeWidgetState extends ConsumerState<_DiscoveryTypeWidget>
     return ListView(
       children: [
         for (BonsoirService service in discoveryState.value!.services)
-          if (service.attributes['attributeUuid'] !=
-              DefaultAppService.service.attributes['attributeUuid'])
             ServiceWidget(service: service),
       ],
     );

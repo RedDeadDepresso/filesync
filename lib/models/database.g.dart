@@ -11,16 +11,13 @@ class $BroadcastingFoldersTable extends BroadcastingFolders
   $BroadcastingFoldersTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => const Uuid().v7(),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -85,7 +82,7 @@ class $BroadcastingFoldersTable extends BroadcastingFolders
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return BroadcastingFolder(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       name: attachedDatabase.typeMapping.read(
@@ -107,7 +104,7 @@ class $BroadcastingFoldersTable extends BroadcastingFolders
 
 class BroadcastingFolder extends DataClass
     implements Insertable<BroadcastingFolder> {
-  final int id;
+  final String id;
   final String name;
   final String path;
   const BroadcastingFolder({
@@ -118,7 +115,7 @@ class BroadcastingFolder extends DataClass
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['path'] = Variable<String>(path);
     return map;
@@ -138,7 +135,7 @@ class BroadcastingFolder extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return BroadcastingFolder(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       path: serializer.fromJson<String>(json['path']),
     );
@@ -147,13 +144,13 @@ class BroadcastingFolder extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'path': serializer.toJson<String>(path),
     };
   }
 
-  BroadcastingFolder copyWith({int? id, String? name, String? path}) =>
+  BroadcastingFolder copyWith({String? id, String? name, String? path}) =>
       BroadcastingFolder(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -189,41 +186,48 @@ class BroadcastingFolder extends DataClass
 }
 
 class BroadcastingFoldersCompanion extends UpdateCompanion<BroadcastingFolder> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
   final Value<String> path;
+  final Value<int> rowid;
   const BroadcastingFoldersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.path = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   BroadcastingFoldersCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     required String path,
+    this.rowid = const Value.absent(),
   }) : name = Value(name),
        path = Value(path);
   static Insertable<BroadcastingFolder> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
     Expression<String>? path,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (path != null) 'path': path,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   BroadcastingFoldersCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
     Value<String>? path,
+    Value<int>? rowid,
   }) {
     return BroadcastingFoldersCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       path: path ?? this.path,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -231,13 +235,16 @@ class BroadcastingFoldersCompanion extends UpdateCompanion<BroadcastingFolder> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
     if (path.present) {
       map['path'] = Variable<String>(path.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -247,43 +254,25 @@ class BroadcastingFoldersCompanion extends UpdateCompanion<BroadcastingFolder> {
     return (StringBuffer('BroadcastingFoldersCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('path: $path')
+          ..write('path: $path, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
 }
 
-class $SyncedFoldersTable extends SyncedFolders
-    with TableInfo<$SyncedFoldersTable, SyncedFolder> {
+class $RemoteFoldersTable extends RemoteFolders
+    with TableInfo<$RemoteFoldersTable, RemoteFolder> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $SyncedFoldersTable(this.attachedDatabase, [this._alias]);
+  $RemoteFoldersTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _sourceUuidMeta = const VerificationMeta(
-    'sourceUuid',
-  );
-  @override
-  late final GeneratedColumn<String> sourceUuid = GeneratedColumn<String>(
-    'source_uuid',
-    aliasedName,
-    false,
-    additionalChecks: GeneratedColumn.checkTextLength(
-      minTextLength: 36,
-      maxTextLength: 36,
-    ),
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
@@ -296,39 +285,35 @@ class $SyncedFoldersTable extends SyncedFolders
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _pathMeta = const VerificationMeta('path');
+  static const VerificationMeta _localPathMeta = const VerificationMeta(
+    'localPath',
+  );
   @override
-  late final GeneratedColumn<String> path = GeneratedColumn<String>(
-    'path',
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+    'local_path',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, sourceUuid, name, path];
+  List<GeneratedColumn> get $columns => [id, name, localPath];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'synced_folders';
+  static const String $name = 'remote_folders';
   @override
   VerificationContext validateIntegrity(
-    Insertable<SyncedFolder> instance, {
+    Insertable<RemoteFolder> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('source_uuid')) {
-      context.handle(
-        _sourceUuidMeta,
-        sourceUuid.isAcceptableOrUnknown(data['source_uuid']!, _sourceUuidMeta),
-      );
     } else if (isInserting) {
-      context.missing(_sourceUuidMeta);
+      context.missing(_idMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -338,13 +323,13 @@ class $SyncedFoldersTable extends SyncedFolders
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
-    if (data.containsKey('path')) {
+    if (data.containsKey('local_path')) {
       context.handle(
-        _pathMeta,
-        path.isAcceptableOrUnknown(data['path']!, _pathMeta),
+        _localPathMeta,
+        localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta),
       );
     } else if (isInserting) {
-      context.missing(_pathMeta);
+      context.missing(_localPathMeta);
     }
     return context;
   }
@@ -352,176 +337,156 @@ class $SyncedFoldersTable extends SyncedFolders
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  SyncedFolder map(Map<String, dynamic> data, {String? tablePrefix}) {
+  RemoteFolder map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SyncedFolder(
+    return RemoteFolder(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      sourceUuid: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}source_uuid'],
+        data['${effectivePrefix}id'],
       )!,
       name: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
-      path: attachedDatabase.typeMapping.read(
+      localPath: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}path'],
+        data['${effectivePrefix}local_path'],
       )!,
     );
   }
 
   @override
-  $SyncedFoldersTable createAlias(String alias) {
-    return $SyncedFoldersTable(attachedDatabase, alias);
+  $RemoteFoldersTable createAlias(String alias) {
+    return $RemoteFoldersTable(attachedDatabase, alias);
   }
 }
 
-class SyncedFolder extends DataClass implements Insertable<SyncedFolder> {
-  final int id;
-  final String sourceUuid;
+class RemoteFolder extends DataClass implements Insertable<RemoteFolder> {
+  final String id;
   final String name;
-  final String path;
-  const SyncedFolder({
+  final String localPath;
+  const RemoteFolder({
     required this.id,
-    required this.sourceUuid,
     required this.name,
-    required this.path,
+    required this.localPath,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['source_uuid'] = Variable<String>(sourceUuid);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
-    map['path'] = Variable<String>(path);
+    map['local_path'] = Variable<String>(localPath);
     return map;
   }
 
-  SyncedFoldersCompanion toCompanion(bool nullToAbsent) {
-    return SyncedFoldersCompanion(
+  RemoteFoldersCompanion toCompanion(bool nullToAbsent) {
+    return RemoteFoldersCompanion(
       id: Value(id),
-      sourceUuid: Value(sourceUuid),
       name: Value(name),
-      path: Value(path),
+      localPath: Value(localPath),
     );
   }
 
-  factory SyncedFolder.fromJson(
+  factory RemoteFolder.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SyncedFolder(
-      id: serializer.fromJson<int>(json['id']),
-      sourceUuid: serializer.fromJson<String>(json['sourceUuid']),
+    return RemoteFolder(
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      path: serializer.fromJson<String>(json['path']),
+      localPath: serializer.fromJson<String>(json['localPath']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'sourceUuid': serializer.toJson<String>(sourceUuid),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
-      'path': serializer.toJson<String>(path),
+      'localPath': serializer.toJson<String>(localPath),
     };
   }
 
-  SyncedFolder copyWith({
-    int? id,
-    String? sourceUuid,
-    String? name,
-    String? path,
-  }) => SyncedFolder(
-    id: id ?? this.id,
-    sourceUuid: sourceUuid ?? this.sourceUuid,
-    name: name ?? this.name,
-    path: path ?? this.path,
-  );
-  SyncedFolder copyWithCompanion(SyncedFoldersCompanion data) {
-    return SyncedFolder(
+  RemoteFolder copyWith({String? id, String? name, String? localPath}) =>
+      RemoteFolder(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        localPath: localPath ?? this.localPath,
+      );
+  RemoteFolder copyWithCompanion(RemoteFoldersCompanion data) {
+    return RemoteFolder(
       id: data.id.present ? data.id.value : this.id,
-      sourceUuid: data.sourceUuid.present
-          ? data.sourceUuid.value
-          : this.sourceUuid,
       name: data.name.present ? data.name.value : this.name,
-      path: data.path.present ? data.path.value : this.path,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('SyncedFolder(')
+    return (StringBuffer('RemoteFolder(')
           ..write('id: $id, ')
-          ..write('sourceUuid: $sourceUuid, ')
           ..write('name: $name, ')
-          ..write('path: $path')
+          ..write('localPath: $localPath')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, sourceUuid, name, path);
+  int get hashCode => Object.hash(id, name, localPath);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is SyncedFolder &&
+      (other is RemoteFolder &&
           other.id == this.id &&
-          other.sourceUuid == this.sourceUuid &&
           other.name == this.name &&
-          other.path == this.path);
+          other.localPath == this.localPath);
 }
 
-class SyncedFoldersCompanion extends UpdateCompanion<SyncedFolder> {
-  final Value<int> id;
-  final Value<String> sourceUuid;
+class RemoteFoldersCompanion extends UpdateCompanion<RemoteFolder> {
+  final Value<String> id;
   final Value<String> name;
-  final Value<String> path;
-  const SyncedFoldersCompanion({
+  final Value<String> localPath;
+  final Value<int> rowid;
+  const RemoteFoldersCompanion({
     this.id = const Value.absent(),
-    this.sourceUuid = const Value.absent(),
     this.name = const Value.absent(),
-    this.path = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
-  SyncedFoldersCompanion.insert({
-    this.id = const Value.absent(),
-    required String sourceUuid,
+  RemoteFoldersCompanion.insert({
+    required String id,
     required String name,
-    required String path,
-  }) : sourceUuid = Value(sourceUuid),
+    required String localPath,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
        name = Value(name),
-       path = Value(path);
-  static Insertable<SyncedFolder> custom({
-    Expression<int>? id,
-    Expression<String>? sourceUuid,
+       localPath = Value(localPath);
+  static Insertable<RemoteFolder> custom({
+    Expression<String>? id,
     Expression<String>? name,
-    Expression<String>? path,
+    Expression<String>? localPath,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (sourceUuid != null) 'source_uuid': sourceUuid,
       if (name != null) 'name': name,
-      if (path != null) 'path': path,
+      if (localPath != null) 'local_path': localPath,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
-  SyncedFoldersCompanion copyWith({
-    Value<int>? id,
-    Value<String>? sourceUuid,
+  RemoteFoldersCompanion copyWith({
+    Value<String>? id,
     Value<String>? name,
-    Value<String>? path,
+    Value<String>? localPath,
+    Value<int>? rowid,
   }) {
-    return SyncedFoldersCompanion(
+    return RemoteFoldersCompanion(
       id: id ?? this.id,
-      sourceUuid: sourceUuid ?? this.sourceUuid,
       name: name ?? this.name,
-      path: path ?? this.path,
+      localPath: localPath ?? this.localPath,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -529,27 +494,27 @@ class SyncedFoldersCompanion extends UpdateCompanion<SyncedFolder> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (sourceUuid.present) {
-      map['source_uuid'] = Variable<String>(sourceUuid.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
-    if (path.present) {
-      map['path'] = Variable<String>(path.value);
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
 
   @override
   String toString() {
-    return (StringBuffer('SyncedFoldersCompanion(')
+    return (StringBuffer('RemoteFoldersCompanion(')
           ..write('id: $id, ')
-          ..write('sourceUuid: $sourceUuid, ')
           ..write('name: $name, ')
-          ..write('path: $path')
+          ..write('localPath: $localPath, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -560,28 +525,30 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $BroadcastingFoldersTable broadcastingFolders =
       $BroadcastingFoldersTable(this);
-  late final $SyncedFoldersTable syncedFolders = $SyncedFoldersTable(this);
+  late final $RemoteFoldersTable remoteFolders = $RemoteFoldersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     broadcastingFolders,
-    syncedFolders,
+    remoteFolders,
   ];
 }
 
 typedef $$BroadcastingFoldersTableCreateCompanionBuilder =
     BroadcastingFoldersCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required String name,
       required String path,
+      Value<int> rowid,
     });
 typedef $$BroadcastingFoldersTableUpdateCompanionBuilder =
     BroadcastingFoldersCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<String> name,
       Value<String> path,
+      Value<int> rowid,
     });
 
 class $$BroadcastingFoldersTableFilterComposer
@@ -593,7 +560,7 @@ class $$BroadcastingFoldersTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -618,7 +585,7 @@ class $$BroadcastingFoldersTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -643,7 +610,7 @@ class $$BroadcastingFoldersTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
@@ -696,20 +663,27 @@ class $$BroadcastingFoldersTableTableManager
               ),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> path = const Value.absent(),
-              }) =>
-                  BroadcastingFoldersCompanion(id: id, name: name, path: path),
+                Value<int> rowid = const Value.absent(),
+              }) => BroadcastingFoldersCompanion(
+                id: id,
+                name: name,
+                path: path,
+                rowid: rowid,
+              ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required String name,
                 required String path,
+                Value<int> rowid = const Value.absent(),
               }) => BroadcastingFoldersCompanion.insert(
                 id: id,
                 name: name,
                 path: path,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -740,37 +714,32 @@ typedef $$BroadcastingFoldersTableProcessedTableManager =
       BroadcastingFolder,
       PrefetchHooks Function()
     >;
-typedef $$SyncedFoldersTableCreateCompanionBuilder =
-    SyncedFoldersCompanion Function({
-      Value<int> id,
-      required String sourceUuid,
+typedef $$RemoteFoldersTableCreateCompanionBuilder =
+    RemoteFoldersCompanion Function({
+      required String id,
       required String name,
-      required String path,
+      required String localPath,
+      Value<int> rowid,
     });
-typedef $$SyncedFoldersTableUpdateCompanionBuilder =
-    SyncedFoldersCompanion Function({
-      Value<int> id,
-      Value<String> sourceUuid,
+typedef $$RemoteFoldersTableUpdateCompanionBuilder =
+    RemoteFoldersCompanion Function({
+      Value<String> id,
       Value<String> name,
-      Value<String> path,
+      Value<String> localPath,
+      Value<int> rowid,
     });
 
-class $$SyncedFoldersTableFilterComposer
-    extends Composer<_$AppDatabase, $SyncedFoldersTable> {
-  $$SyncedFoldersTableFilterComposer({
+class $$RemoteFoldersTableFilterComposer
+    extends Composer<_$AppDatabase, $RemoteFoldersTable> {
+  $$RemoteFoldersTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get sourceUuid => $composableBuilder(
-    column: $table.sourceUuid,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -779,28 +748,23 @@ class $$SyncedFoldersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get path => $composableBuilder(
-    column: $table.path,
+  ColumnFilters<String> get localPath => $composableBuilder(
+    column: $table.localPath,
     builder: (column) => ColumnFilters(column),
   );
 }
 
-class $$SyncedFoldersTableOrderingComposer
-    extends Composer<_$AppDatabase, $SyncedFoldersTable> {
-  $$SyncedFoldersTableOrderingComposer({
+class $$RemoteFoldersTableOrderingComposer
+    extends Composer<_$AppDatabase, $RemoteFoldersTable> {
+  $$RemoteFoldersTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get sourceUuid => $composableBuilder(
-    column: $table.sourceUuid,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -809,88 +773,83 @@ class $$SyncedFoldersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get path => $composableBuilder(
-    column: $table.path,
+  ColumnOrderings<String> get localPath => $composableBuilder(
+    column: $table.localPath,
     builder: (column) => ColumnOrderings(column),
   );
 }
 
-class $$SyncedFoldersTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SyncedFoldersTable> {
-  $$SyncedFoldersTableAnnotationComposer({
+class $$RemoteFoldersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RemoteFoldersTable> {
+  $$RemoteFoldersTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get sourceUuid => $composableBuilder(
-    column: $table.sourceUuid,
-    builder: (column) => column,
-  );
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<String> get path =>
-      $composableBuilder(column: $table.path, builder: (column) => column);
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
 }
 
-class $$SyncedFoldersTableTableManager
+class $$RemoteFoldersTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $SyncedFoldersTable,
-          SyncedFolder,
-          $$SyncedFoldersTableFilterComposer,
-          $$SyncedFoldersTableOrderingComposer,
-          $$SyncedFoldersTableAnnotationComposer,
-          $$SyncedFoldersTableCreateCompanionBuilder,
-          $$SyncedFoldersTableUpdateCompanionBuilder,
+          $RemoteFoldersTable,
+          RemoteFolder,
+          $$RemoteFoldersTableFilterComposer,
+          $$RemoteFoldersTableOrderingComposer,
+          $$RemoteFoldersTableAnnotationComposer,
+          $$RemoteFoldersTableCreateCompanionBuilder,
+          $$RemoteFoldersTableUpdateCompanionBuilder,
           (
-            SyncedFolder,
-            BaseReferences<_$AppDatabase, $SyncedFoldersTable, SyncedFolder>,
+            RemoteFolder,
+            BaseReferences<_$AppDatabase, $RemoteFoldersTable, RemoteFolder>,
           ),
-          SyncedFolder,
+          RemoteFolder,
           PrefetchHooks Function()
         > {
-  $$SyncedFoldersTableTableManager(_$AppDatabase db, $SyncedFoldersTable table)
+  $$RemoteFoldersTableTableManager(_$AppDatabase db, $RemoteFoldersTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$SyncedFoldersTableFilterComposer($db: db, $table: table),
+              $$RemoteFoldersTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$SyncedFoldersTableOrderingComposer($db: db, $table: table),
+              $$RemoteFoldersTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$SyncedFoldersTableAnnotationComposer($db: db, $table: table),
+              $$RemoteFoldersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
-                Value<String> sourceUuid = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
-                Value<String> path = const Value.absent(),
-              }) => SyncedFoldersCompanion(
+                Value<String> localPath = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RemoteFoldersCompanion(
                 id: id,
-                sourceUuid: sourceUuid,
                 name: name,
-                path: path,
+                localPath: localPath,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
-                required String sourceUuid,
+                required String id,
                 required String name,
-                required String path,
-              }) => SyncedFoldersCompanion.insert(
+                required String localPath,
+                Value<int> rowid = const Value.absent(),
+              }) => RemoteFoldersCompanion.insert(
                 id: id,
-                sourceUuid: sourceUuid,
                 name: name,
-                path: path,
+                localPath: localPath,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -900,21 +859,21 @@ class $$SyncedFoldersTableTableManager
       );
 }
 
-typedef $$SyncedFoldersTableProcessedTableManager =
+typedef $$RemoteFoldersTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $SyncedFoldersTable,
-      SyncedFolder,
-      $$SyncedFoldersTableFilterComposer,
-      $$SyncedFoldersTableOrderingComposer,
-      $$SyncedFoldersTableAnnotationComposer,
-      $$SyncedFoldersTableCreateCompanionBuilder,
-      $$SyncedFoldersTableUpdateCompanionBuilder,
+      $RemoteFoldersTable,
+      RemoteFolder,
+      $$RemoteFoldersTableFilterComposer,
+      $$RemoteFoldersTableOrderingComposer,
+      $$RemoteFoldersTableAnnotationComposer,
+      $$RemoteFoldersTableCreateCompanionBuilder,
+      $$RemoteFoldersTableUpdateCompanionBuilder,
       (
-        SyncedFolder,
-        BaseReferences<_$AppDatabase, $SyncedFoldersTable, SyncedFolder>,
+        RemoteFolder,
+        BaseReferences<_$AppDatabase, $RemoteFoldersTable, RemoteFolder>,
       ),
-      SyncedFolder,
+      RemoteFolder,
       PrefetchHooks Function()
     >;
 
@@ -923,6 +882,6 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$BroadcastingFoldersTableTableManager get broadcastingFolders =>
       $$BroadcastingFoldersTableTableManager(_db, _db.broadcastingFolders);
-  $$SyncedFoldersTableTableManager get syncedFolders =>
-      $$SyncedFoldersTableTableManager(_db, _db.syncedFolders);
+  $$RemoteFoldersTableTableManager get remoteFolders =>
+      $$RemoteFoldersTableTableManager(_db, _db.remoteFolders);
 }
