@@ -1,8 +1,9 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:archive/archive_io.dart';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:filesync/models/app_service.dart';
 import 'package:filesync/models/database.dart';
-import 'package:dio/dio.dart';
 import 'package:filesync/utils/normalize_path.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
@@ -17,13 +18,18 @@ Future<Map<String, Map<String, String>>> fetchRemoteFolders(
     throw Exception("Failed to resolve details about the nearby device");
   }
 
-  final dio = Dio();
-  final response = await dio.get(
-    "http://$host:${DefaultAppService.port}/broadcasting-folders",
-    options: Options(responseType: ResponseType.json),
+  final response = await http.get(
+    Uri.parse("http://$host:${DefaultAppService.port}/broadcasting-folders"),
+    headers: {'Accept': 'application/json'},
   );
 
-  final Map<String, Map<String, String>> data = (response.data as Map).map(
+  if (response.statusCode != 200) {
+    throw Exception('Failed to fetch remote folders');
+  }
+
+  final rawData = jsonDecode(response.body) as Map<String, dynamic>;
+
+  final Map<String, Map<String, String>> data = (rawData as Map).map(
     (key, value) =>
         MapEntry(key.toString(), Map<String, String>.from(value as Map)),
   );
