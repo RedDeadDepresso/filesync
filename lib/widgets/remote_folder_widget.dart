@@ -26,6 +26,8 @@ class RemoteFolderWidget extends ConsumerStatefulWidget {
       _RemoteFolderWidgetState();
 }
 
+enum CommandItem { link, unlink }
+
 class _RemoteFolderWidgetState extends ConsumerState<RemoteFolderWidget> {
   String? pickedDirectoryPath;
   Map<String, String>? get data => widget.remoteFolders[widget.id];
@@ -36,7 +38,7 @@ class _RemoteFolderWidgetState extends ConsumerState<RemoteFolderWidget> {
 
   String get id => widget.id;
   String get name => data!["name"] ?? "";
-  
+
   set name(String value) {
     data!["name"] = value;
   }
@@ -46,7 +48,7 @@ class _RemoteFolderWidgetState extends ConsumerState<RemoteFolderWidget> {
     data!["localPath"] = value;
   }
 
-  void _selectFolder() async {
+  void _link() async {
     final db = ref.read(databaseProvider);
     try {
       pickedDirectoryPath = await FilePicker.platform.getDirectoryPath(
@@ -73,16 +75,33 @@ class _RemoteFolderWidgetState extends ConsumerState<RemoteFolderWidget> {
     }
   }
 
+  void _unLink() async {
+    final db = ref.read(databaseProvider);
+    await db.managers.remoteFolders.filter((f) => f.id.equals(id)).delete();
+    localPath = "";
+    setState(() {
+      widget.remoteFolders;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
       child: CheckboxListTile(
         title: Text(name),
         subtitle: Text(localPath),
-        secondary: TextButton(
-          onPressed: _selectFolder,
-          child: const Text("Link"),
-        ),
+        secondary: localPath.isEmpty
+            ? TextButton(onPressed: _link, child: const Text("Link"))
+            : PopupMenuButton(
+                itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                  PopupMenuItem(child: Text('Sync')),
+                  PopupMenuItem(onTap: _link, child: Text('Link')),
+                  PopupMenuItem(
+                    onTap: _unLink,
+                    child: Text('Unlink', style: TextStyle(color: Colors.red)),
+                  ),
+                ],
+              ),
         value: widget.isSelected,
         enabled: localPath.isNotEmpty,
         controlAffinity: ListTileControlAffinity.leading,

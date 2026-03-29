@@ -15,6 +15,9 @@ class DefaultAppService {
   /// The "service type" attribute
   static const String serviceType = '_filesync._tcp';
 
+  /// The "service type" attribute
+  static const int port = 4000;
+
   /// The default app service.
   static late BonsoirService _service;
   static late BonsoirBroadcast _broadcast;
@@ -53,7 +56,7 @@ class DefaultAppService {
     _service = BonsoirService(
       name: name,
       type: serviceType,
-      port: 4000,
+      port: port,
       attributes: {attributeOs: os, attributeUuid: await FlutterUdid.udid},
     );
 

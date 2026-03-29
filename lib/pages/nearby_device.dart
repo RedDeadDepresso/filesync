@@ -1,40 +1,9 @@
 import 'package:bonsoir/bonsoir.dart';
+import 'package:filesync/models/client.dart';
 import 'package:filesync/models/database.dart';
 import 'package:filesync/widgets/remote_folder_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
-
-Future<Map<String, Map<String, String>>> fetchRemoteFolders(
-  AppDatabase db,
-  BonsoirService service,
-) async {
-  final host = service.host;
-  if (host == null) {
-    throw Exception("Failed to resolve details about the nearby device");
-  }
-
-  final dio = Dio();
-  final response = await dio.get(
-    "http://$host:4000/broadcasting-folders",
-    options: Options(responseType: ResponseType.json),
-  );
-
-  final Map<String, Map<String, String>> data = (response.data as Map).map(
-    (key, value) =>
-        MapEntry(key.toString(), Map<String, String>.from(value as Map)),
-  );
-
-  final remoteFolders = await db.managers.remoteFolders
-      .filter((f) => f.id.isIn(data.keys))
-      .get();
-
-  for (var f in remoteFolders) {
-    data[f.id]?["localPath"] = f.localPath;
-  }
-
-  return data;
-}
 
 class NearbyDevicePageWidget extends ConsumerStatefulWidget {
   final BonsoirService service;
@@ -49,24 +18,51 @@ class NearbyDevicePageWidget extends ConsumerStatefulWidget {
 class _NearbyDevicePageWidgetState
     extends ConsumerState<NearbyDevicePageWidget> {
   late Future<Map<String, Map<String, String>>> futureRemoteFolders;
-  final Set<String> seletectedFolders = {};
+  final Set<String> selectedFolders = {};
 
   @override
   void initState() {
     super.initState();
     final db = ref.read(databaseProvider);
-    futureRemoteFolders = fetchRemoteFolders(db, widget.service);
+    futureRemoteFolders = fetchRemoteFolders(db, widget.service.host);
   }
 
   void _updateSelectedFolder(String folderId, bool? add) {
     if (add == true) {
-      seletectedFolders.add(folderId);
+      selectedFolders.add(folderId);
     } else {
-      seletectedFolders.remove(folderId);
+      selectedFolders.remove(folderId);
     }
     setState(() {
-      seletectedFolders;
+      selectedFolders;
     });
+  }
+
+  void _unlinkSelectedFolders() {
+    final db = ref.read(databaseProvider);
+    db.managers.remoteFolders
+        .filter((f) => f.id.isIn(selectedFolders))
+        .delete();
+    futureRemoteFolders.then(
+      (folders) => {
+        for (String id in selectedFolders) {folders[id]!["localPath"] = ""},
+        selectedFolders.clear(),
+        setState(() {
+          selectedFolders;
+          futureRemoteFolders;
+        }),
+      },
+    );
+  }
+
+  void _syncAll() async {
+    for (String folderId in selectedFolders) {
+      final remoteFolders = await futureRemoteFolders;
+      final folderPath = remoteFolders[folderId]!["localPath"];
+      if (folderPath != null || folderPath != "") {
+        syncRemoteFolder(widget.service.host, folderId, folderPath!);
+      }
+    }
   }
 
   @override
@@ -85,7 +81,7 @@ class _NearbyDevicePageWidgetState
                     RemoteFolderWidget(
                       id: id,
                       remoteFolders: snapshot.requireData,
-                      isSelected: seletectedFolders.contains(id),
+                      isSelected: selectedFolders.contains(id),
                       onChanged: (add) => _updateSelectedFolder(id, add),
                     ),
                 ],
@@ -97,12 +93,24 @@ class _NearbyDevicePageWidgetState
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => {},
-        tooltip: 'Sync',
-        child: Row(children: [Icon(Icons.sync), Text("Sync")]),
-      
-      ),
+      persistentFooterButtons: [
+        OutlinedButton.icon(
+          icon: const Icon(Icons.remove),
+          onPressed: selectedFolders.isEmpty ? null : _unlinkSelectedFolders,
+          label: const Text("Unlink"),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.red,
+            side: selectedFolders.isEmpty
+                ? null
+                : const BorderSide(color: Colors.red),
+          ),
+        ),
+        FilledButton.icon(
+          icon: const Icon(Icons.sync),
+          onPressed: selectedFolders.isEmpty ? null : _syncAll,
+          label: const Text("Sync"),
+        ),
+      ],
     );
   }
 }

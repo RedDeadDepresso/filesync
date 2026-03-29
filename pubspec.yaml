@@ -47,6 +47,11 @@ dependencies:
   shelf: ^1.4.2
   shelf_router: ^1.1.4
   go_router: ^17.1.0
+  flutter_archive: ^6.0.4
+  background_downloader: ^9.5.4
+  path: ^1.9.1
+  archive: ^4.0.9
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:

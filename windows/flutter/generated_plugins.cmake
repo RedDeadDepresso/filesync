@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   bonsoir_windows
   flutter_udid
+  permission_handler_windows
   sqlite3_flutter_libs
 )
 
