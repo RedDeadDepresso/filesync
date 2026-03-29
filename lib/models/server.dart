@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:drift/native.dart';
 import 'package:filesync/models/database.dart';
+import 'package:filesync/utils/normalize_path.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
@@ -27,7 +28,7 @@ Stream<List<int>> streamZip(
   await for (final entity in baseDir.list(recursive: true)) {
     if (entity is! File) continue;
 
-    final relativePath = p.relative(entity.path, from: dirPath);
+    final relativePath = normalizePath(p.relative(entity.path, from: dirPath));
     if (excludePaths.containsKey(relativePath)) continue;
 
     final bytes = await entity.readAsBytes();

@@ -3,6 +3,7 @@ import 'package:background_downloader/background_downloader.dart';
 import 'package:filesync/models/app_service.dart';
 import 'package:filesync/models/database.dart';
 import 'package:dio/dio.dart';
+import 'package:filesync/utils/normalize_path.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'dart:async';
@@ -46,7 +47,7 @@ Future<Map<String, Null>> getFiles(String dirPath) async {
   final Map<String, Null> files = {};
   await dir.list(recursive: true, followLinks: false).forEach((entity) {
     if (entity is File) {
-      final String relativePath = p.relative(entity.path, from: base);
+      final relativePath = normalizePath(p.relative(entity.path, from: base));
       files[relativePath] = null;
     }
   });
@@ -69,17 +70,6 @@ Future<bool> requestStoragePermission() async {
   return false;
 }
 
-String safePath(String filename) {
-  // Replace backslashes with forward slashes
-  filename = filename.replaceAll(r'\', '/');
-
-  // Remove any leading slashes
-  filename = filename.replaceAll(RegExp(r'^/+'), '');
-
-  // Normalize for current OS
-  return p.normalize(filename);
-}
-
 Future<bool> extractZipFile(String zipPath, String destinationDirPath) async {
   final zipFile = File(zipPath);
   if (!await zipFile.exists()) return false;
@@ -97,8 +87,8 @@ Future<bool> extractZipFile(String zipPath, String destinationDirPath) async {
     final archive = ZipDecoder().decodeBytes(bytes);
 
     for (final file in archive) {
-      final safeFilename = safePath(file.name);
-      final outPath = p.join(destinationDir.path, safeFilename);
+      final filename = normalizePath(file.name);
+      final outPath = p.join(destinationDir.path, filename);
 
       if (file.isFile) {
         final outFile = File(outPath);
