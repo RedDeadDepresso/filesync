@@ -17,8 +17,34 @@ class RemoteFoldersNotifier extends AsyncNotifier<Map<String, RemoteFolder>> {
   @override
   FutureOr<Map<String, RemoteFolder>> build() async {
     final db = ref.read(databaseProvider);
-    final remoteFolders = await fetchRemoteFolders(db, host);
+    final remoteFolders = await fetchRemoteFolders(host);
+    final syncedFolders = await db.managers.syncedFolders
+        .filter((f) => f.id.isIn(remoteFolders.keys))
+        .get();
+
+    for (var syncedFolder in syncedFolders) {
+      final remoteFolder = remoteFolders[syncedFolder.id];
+      if (remoteFolder != null) {
+        remoteFolder.path = syncedFolder.path;
+      }
+    }
     return remoteFolders;
+  }
+
+  Future<void> refresh() async {
+    final remoteFolders = await fetchRemoteFolders(host);
+
+    for (RemoteFolder oldFolder in state.value!.values) {
+      final remoteFolder = remoteFolders[oldFolder.id];
+      if (remoteFolder != null) {
+        remoteFolder.isDownloading = oldFolder.isDownloading;
+        remoteFolder.downloadProgress = oldFolder.downloadProgress;
+        remoteFolder.isExtracting = oldFolder.isDownloading;
+        remoteFolder.path = oldFolder.path;
+      }
+    }
+
+    state = AsyncData(remoteFolders);
   }
 
   RemoteFolder? getRemoteFolder(String folderId) {

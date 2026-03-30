@@ -59,7 +59,16 @@ class _NearbyDevicePageWidgetState
       remoteFoldersProvider(widget.service.host!),
     );
     return Scaffold(
-      appBar: AppBar(title: Text(widget.service.name)),
+      appBar: AppBar(
+        title: Text(widget.service.name),
+        actions: [
+          IconButton(
+            onPressed: () async => await getNotifier().refresh(),
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
       body: Padding(
         padding: EdgeInsets.all(10),
         child: asyncRemoteFolders.when(

@@ -4,17 +4,13 @@ import 'package:http/http.dart' as http;
 import 'package:archive/archive_io.dart';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:filesync/models/app_service.dart';
-import 'package:filesync/models/database.dart';
 import 'package:filesync/utils/normalize_path.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'dart:async';
 import 'package:permission_handler/permission_handler.dart';
 
-Future<Map<String, RemoteFolder>> fetchRemoteFolders(
-  AppDatabase db,
-  String? host,
-) async {
+Future<Map<String, RemoteFolder>> fetchRemoteFolders(String? host) async {
   if (host == null) {
     throw Exception("Failed to resolve details about the nearby device");
   }
@@ -34,17 +30,6 @@ Future<Map<String, RemoteFolder>> fetchRemoteFolders(
     for (var e in rawData.entries)
       e.key: RemoteFolder(id: e.key, name: e.value as String),
   };
-
-  final syncedFolders = await db.managers.syncedFolders
-      .filter((f) => f.id.isIn(data.keys))
-      .get();
-
-  for (var f in syncedFolders) {
-    final folder = data[f.id];
-    if (folder != null) {
-      folder.path = f.path;
-    }
-  }
 
   return data;
 }

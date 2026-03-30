@@ -72,7 +72,7 @@ class _DiscoveryTypeWidgetState extends ConsumerState<_DiscoveryTypeWidget>
         child: CircularProgressIndicator(),
       );
     } else if (!discoveryState.hasValue ||
-        discoveryState.value!.services.length <= 1) {
+        discoveryState.value!.services.isEmpty) {
       return Center(
         child: Card(
           child: ListTile(
@@ -86,7 +86,7 @@ class _DiscoveryTypeWidgetState extends ConsumerState<_DiscoveryTypeWidget>
     return ListView(
       children: [
         for (BonsoirService service in discoveryState.value!.services)
-            ServiceWidget(service: service),
+          ServiceWidget(service: service),
       ],
     );
   }
