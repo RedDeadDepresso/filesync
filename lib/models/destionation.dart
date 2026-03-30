@@ -20,7 +20,7 @@ const destinations = [
   ),
   Destination(
     icon: Icons.wifi_tethering,
-    labelMobile: 'Broadcasting Folders',
-    labelDesktop: 'Broadcasting',
+    labelMobile: 'Shared Folders',
+    labelDesktop: 'Shared',
   ),
 ];

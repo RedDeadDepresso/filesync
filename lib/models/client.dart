@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:filesync/models/remote_folder.dart';
 import 'package:http/http.dart' as http;
 import 'package:archive/archive_io.dart';
 import 'package:background_downloader/background_downloader.dart';
@@ -10,7 +11,7 @@ import 'package:path/path.dart' as p;
 import 'dart:async';
 import 'package:permission_handler/permission_handler.dart';
 
-Future<Map<String, Map<String, String>>> fetchRemoteFolders(
+Future<Map<String, RemoteFolder>> fetchRemoteFolders(
   AppDatabase db,
   String? host,
 ) async {
@@ -19,7 +20,7 @@ Future<Map<String, Map<String, String>>> fetchRemoteFolders(
   }
 
   final response = await http.get(
-    Uri.parse("http://$host:${DefaultAppService.port}/broadcasting-folders"),
+    Uri.parse("http://$host:${DefaultAppService.port}/shared-folders"),
     headers: {'Accept': 'application/json'},
   );
 
@@ -29,17 +30,20 @@ Future<Map<String, Map<String, String>>> fetchRemoteFolders(
 
   final rawData = jsonDecode(response.body) as Map<String, dynamic>;
 
-  final Map<String, Map<String, String>> data = (rawData as Map).map(
-    (key, value) =>
-        MapEntry(key.toString(), Map<String, String>.from(value as Map)),
-  );
+  final data = {
+    for (var e in rawData.entries)
+      e.key: RemoteFolder(id: e.key, name: e.value as String),
+  };
 
-  final remoteFolders = await db.managers.remoteFolders
+  final syncedFolders = await db.managers.syncedFolders
       .filter((f) => f.id.isIn(data.keys))
       .get();
 
-  for (var f in remoteFolders) {
-    data[f.id]?["localPath"] = f.localPath;
+  for (var f in syncedFolders) {
+    final folder = data[f.id];
+    if (folder != null) {
+      folder.path = f.path;
+    }
   }
 
   return data;
@@ -76,7 +80,11 @@ Future<bool> requestStoragePermission() async {
   return false;
 }
 
-Future<bool> extractZipFile(String zipPath, String destinationDirPath) async {
+Future<bool> extractZipFile(
+  String zipPath,
+  String destinationDirPath, {
+  bool deleteOnSuccess = true,
+}) async {
   final zipFile = File(zipPath);
   if (!await zipFile.exists()) return false;
 
@@ -105,6 +113,8 @@ Future<bool> extractZipFile(String zipPath, String destinationDirPath) async {
       }
     }
 
+    if (deleteOnSuccess) await zipFile.delete();
+
     return true;
   } catch (e) {
     print('Error extracting ZIP: $e');
@@ -114,40 +124,43 @@ Future<bool> extractZipFile(String zipPath, String destinationDirPath) async {
 
 Future<bool> syncRemoteFolder(
   String? host,
-  String folderId,
-  String folderPath,
-) async {
+  RemoteFolder remoteFolder, {
+  void Function(double)? onDownloadProgress,
+  void Function()? onExtractionStarted,
+  void Function()? onExtractionFinished,
+}) async {
   if (host == null) {
     return false;
   }
-
-  final existingFiles = await getFiles(folderPath);
-  print(existingFiles);
-  final filename = "$folderId.zip";
-  print(folderId);
+  final excludeFiles = await getFiles(remoteFolder.path);
+  print(excludeFiles);
+  final filename = "${remoteFolder.id}.zip";
+  print(remoteFolder.id);
   final hasPermission = await requestStoragePermission();
   if (!hasPermission) return false;
 
   final task = DownloadTask(
     url:
-        "http://$host:${DefaultAppService.port}/broadcasting-folders/$folderId/sync",
-    post: existingFiles,
-    filename: filename,
-  );
+        "http://$host:${DefaultAppService.port}/shared-folders/${remoteFolder.id}/sync",
 
+    post: excludeFiles,
+    filename: filename,
+    baseDirectory: BaseDirectory.temporary,
+  );
   final result = await FileDownloader().download(
     task,
-    onProgress: (percentage) => print(percentage),
+    onProgress: onDownloadProgress,
   );
   print(result.status);
   if (result.status == TaskStatus.complete) {
+    if (onExtractionStarted != null) onExtractionStarted();
     final zipPath = await task.filePath();
     print(zipPath);
     final hasPermission = await requestStoragePermission();
     if (!hasPermission) return false;
-    final r = await extractZipFile(zipPath, folderPath);
-    print(r);
-    return r;
+    final bool extracted = await extractZipFile(zipPath, remoteFolder.path);
+    if (onExtractionFinished != null) onExtractionFinished();
+    return extracted;
   }
   return false;
 }

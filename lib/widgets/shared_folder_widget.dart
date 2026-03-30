@@ -3,19 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Allows to display a discovered service.
-class BroadcastingFolderWidget extends ConsumerWidget {
+class SharedFolderWidget extends ConsumerWidget {
   /// The discovered service.
-  final BroadcastingFolder folder;
+  final SharedFolder folder;
 
   /// The trailing widget.
   final Widget? trailing;
 
   /// Creates a new service widget.
-  const BroadcastingFolderWidget({
-    super.key,
-    required this.folder,
-    this.trailing,
-  });
+  const SharedFolderWidget({super.key, required this.folder, this.trailing});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

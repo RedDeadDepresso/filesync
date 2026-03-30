@@ -1,5 +1,5 @@
 import 'package:filesync/dialogs/folder_prompt.dart';
-import 'package:filesync/models/database.dart';
+import 'package:filesync/providers/database_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,7 +14,7 @@ class AddIcon extends ConsumerWidget {
       (String, String)? result = await FolderPromptDialog.prompt(context);
       if (result != null && result.$1 != '' && result.$2 != '') {
         final db = ref.watch(databaseProvider);
-        db.managers.broadcastingFolders.create(
+        db.managers.sharedFolders.create(
           (f) => f(name: result.$1, path: result.$2),
         );
       }

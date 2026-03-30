@@ -1,6 +1,8 @@
+import 'dart:io';
+
 import 'package:bonsoir/bonsoir.dart';
-import 'package:filesync/models/client.dart';
-import 'package:filesync/models/database.dart';
+import 'package:filesync/providers/remote_folders_provider.dart';
+import 'package:filesync/widgets/loading_card.dart';
 import 'package:filesync/widgets/remote_folder_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,97 +19,87 @@ class NearbyDevicePageWidget extends ConsumerStatefulWidget {
 
 class _NearbyDevicePageWidgetState
     extends ConsumerState<NearbyDevicePageWidget> {
-  late Future<Map<String, Map<String, String>>> futureRemoteFolders;
-  final Set<String> selectedFolders = {};
+  final Set<String> selectedFolderIds = {};
 
-  @override
-  void initState() {
-    super.initState();
-    final db = ref.read(databaseProvider);
-    futureRemoteFolders = fetchRemoteFolders(db, widget.service.host);
-  }
-
-  void _updateSelectedFolder(String folderId, bool? add) {
+  void updateSelectedFolder(String folderId, bool? add) {
     if (add == true) {
-      selectedFolders.add(folderId);
+      selectedFolderIds.add(folderId);
     } else {
-      selectedFolders.remove(folderId);
+      selectedFolderIds.remove(folderId);
     }
     setState(() {
-      selectedFolders;
+      selectedFolderIds;
     });
   }
 
-  void _unlinkSelectedFolders() {
-    final db = ref.read(databaseProvider);
-    db.managers.remoteFolders
-        .filter((f) => f.id.isIn(selectedFolders))
-        .delete();
-    futureRemoteFolders.then(
-      (folders) => {
-        for (String id in selectedFolders) {folders[id]!["localPath"] = ""},
-        selectedFolders.clear(),
-        setState(() {
-          selectedFolders;
-          futureRemoteFolders;
-        }),
-      },
-    );
+  Future<void> view(String folderId) async {
+    final folder = getNotifier().getRemoteFolder(folderId);
+    if (folder == null) return;
+    if (Platform.isWindows) {
+      Process.run('explorer', [folder.path]);
+    } else if (Platform.isMacOS) {
+      Process.run('open', [folder.path]);
+    } else if (Platform.isLinux) {
+      Process.run('xdg-open', [folder.path]);
+    }
   }
 
-  void _syncAll() async {
-    for (String folderId in selectedFolders) {
-      final remoteFolders = await futureRemoteFolders;
-      final folderPath = remoteFolders[folderId]!["localPath"];
-      if (folderPath != null || folderPath != "") {
-        syncRemoteFolder(widget.service.host, folderId, folderPath!);
-      }
-    }
+  RemoteFoldersNotifier getNotifier() {
+    return ref.read(remoteFoldersProvider(widget.service.host!).notifier);
+  }
+
+  Future<void> unlinkSelectedFolders() async {
+    await getNotifier().unlinkMulti(selectedFolderIds);
+    selectedFolderIds.clear();
   }
 
   @override
   Widget build(BuildContext context) {
+    final asyncRemoteFolders = ref.watch(
+      remoteFoldersProvider(widget.service.host!),
+    );
     return Scaffold(
       appBar: AppBar(title: Text(widget.service.name)),
       body: Padding(
         padding: EdgeInsets.all(10),
-        child: FutureBuilder(
-          future: futureRemoteFolders,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return ListView(
-                children: [
-                  for (var id in snapshot.requireData.keys)
-                    RemoteFolderWidget(
-                      id: id,
-                      remoteFolders: snapshot.requireData,
-                      isSelected: selectedFolders.contains(id),
-                      onChanged: (add) => _updateSelectedFolder(id, add),
-                    ),
-                ],
-              );
-            } else if (snapshot.hasError) {
-              return Text('${snapshot.error}');
-            }
-            return const CircularProgressIndicator();
-          },
+        child: asyncRemoteFolders.when(
+          data: (remoteFolders) => ListView(
+            children: [
+              for (var remoteFolder in remoteFolders.values)
+                RemoteFolderWidget(
+                  remoteFolder: remoteFolder,
+                  isSelected: selectedFolderIds.contains(remoteFolder.id),
+                  onChanged: (add) =>
+                      updateSelectedFolder(remoteFolder.id, add),
+                  onSync: () async => await getNotifier().sync(remoteFolder.id),
+                  onView: () async => await view(remoteFolder.id),
+                  onLink: () async => await getNotifier().link(remoteFolder.id),
+                  onUnlink: () async =>
+                      await getNotifier().unlink(remoteFolder.id),
+                ),
+            ],
+          ),
+          error: (err, stack) => Text('$err'),
+          loading: () => LoadingCard(text: "Loading remote folders..."),
         ),
       ),
       persistentFooterButtons: [
         OutlinedButton.icon(
           icon: const Icon(Icons.remove),
-          onPressed: selectedFolders.isEmpty ? null : _unlinkSelectedFolders,
+          onPressed: selectedFolderIds.isEmpty ? null : unlinkSelectedFolders,
           label: const Text("Unlink"),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.red,
-            side: selectedFolders.isEmpty
+            side: selectedFolderIds.isEmpty
                 ? null
                 : const BorderSide(color: Colors.red),
           ),
         ),
         FilledButton.icon(
           icon: const Icon(Icons.sync),
-          onPressed: selectedFolders.isEmpty ? null : _syncAll,
+          onPressed: selectedFolderIds.isEmpty
+              ? null
+              : () async => await getNotifier().syncMulti(selectedFolderIds),
           label: const Text("Sync"),
         ),
       ],
