@@ -64,7 +64,7 @@ class SharedFoldersPageWidgetState
     );
     if (result != null && result.$1 != '' && result.$2 != '') {
       final db = ref.read(databaseProvider);
-      db.managers.sharedFolders
+      await db.managers.sharedFolders
           .filter((f) => f.id.equals(folder.id))
           .update((f) => f(name: Value(result.$1), path: Value(result.$2)));
     }
@@ -103,10 +103,7 @@ class SharedFoldersPageWidgetState
                     const Text(
                       'Currently not sharing any folder.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black54,
-                        fontStyle: FontStyle.italic,
-                      ),
+                      style: TextStyle(fontStyle: FontStyle.italic),
                     )
                   else
                     for (SharedFolder folder in folders)
@@ -117,7 +114,7 @@ class SharedFoldersPageWidgetState
                             updateSelectedFolder(folder.id, value),
                         onView: () => view(folder.id),
                         onEdit: () => edit(folder.id),
-                        onDelete: () async => await delete(folder.id),
+                        onDelete: () => delete(folder.id),
                       ),
                 ],
               ),

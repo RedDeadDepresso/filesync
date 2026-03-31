@@ -32,6 +32,10 @@ class _NearbyDevicePageWidgetState
     });
   }
 
+  RemoteFoldersNotifier getNotifier() {
+    return ref.read(remoteFoldersProvider(widget.service.host!).notifier);
+  }
+
   Future<void> view(String folderId) async {
     final folder = getNotifier().getRemoteFolder(folderId);
     if (folder == null) return;
@@ -44,13 +48,34 @@ class _NearbyDevicePageWidgetState
     }
   }
 
-  RemoteFoldersNotifier getNotifier() {
-    return ref.read(remoteFoldersProvider(widget.service.host!).notifier);
+  Future<void> sync(String folderId) async {
+    setState(() {
+      selectedFolderIds.remove(folderId);
+    });
+    await getNotifier().sync(folderId);
+  }
+
+  Future<void> unLink(String folderId) async {
+    setState(() {
+      selectedFolderIds.remove(folderId);
+    });
+    await getNotifier().unlink(folderId);
+  }
+
+  Future<void> syncSelectedFolders() async {
+    final folderIds = {...selectedFolderIds};
+    setState(() {
+      selectedFolderIds.clear();
+    });
+    await getNotifier().syncMulti(folderIds);
   }
 
   Future<void> unlinkSelectedFolders() async {
-    await getNotifier().unlinkMulti(selectedFolderIds);
-    selectedFolderIds.clear();
+    final folderIds = {...selectedFolderIds};
+    setState(() {
+      selectedFolderIds.clear();
+    });
+    await getNotifier().unlinkMulti(folderIds);
   }
 
   @override
@@ -69,25 +94,30 @@ class _NearbyDevicePageWidgetState
           ),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.all(10),
+      body: Center(
         child: asyncRemoteFolders.when(
-          data: (remoteFolders) => ListView(
-            children: [
-              for (var remoteFolder in remoteFolders.values)
-                RemoteFolderWidget(
-                  remoteFolder: remoteFolder,
-                  isSelected: selectedFolderIds.contains(remoteFolder.id),
-                  onChanged: (add) =>
-                      updateSelectedFolder(remoteFolder.id, add),
-                  onSync: () async => await getNotifier().sync(remoteFolder.id),
-                  onView: () async => await view(remoteFolder.id),
-                  onLink: () async => await getNotifier().link(remoteFolder.id),
-                  onUnlink: () async =>
-                      await getNotifier().unlink(remoteFolder.id),
+          data: (remoteFolders) => remoteFolders.isEmpty
+              ? const Text(
+                  'The device is not sharing any folder.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontStyle: FontStyle.italic),
+                )
+              : ListView(
+                  padding: EdgeInsets.all(10),
+                  children: [
+                    for (var remoteFolder in remoteFolders.values)
+                      RemoteFolderWidget(
+                        remoteFolder: remoteFolder,
+                        isSelected: selectedFolderIds.contains(remoteFolder.id),
+                        onChanged: (add) =>
+                            updateSelectedFolder(remoteFolder.id, add),
+                        onSync: () => sync(remoteFolder.id),
+                        onView: () => view(remoteFolder.id),
+                        onLink: () => getNotifier().link(remoteFolder.id),
+                        onUnlink: () => unLink(remoteFolder.id),
+                      ),
+                  ],
                 ),
-            ],
-          ),
           error: (err, stack) => Text('$err'),
           loading: () => LoadingCard(text: "Loading remote folders..."),
         ),
@@ -106,9 +136,7 @@ class _NearbyDevicePageWidgetState
         ),
         FilledButton.icon(
           icon: const Icon(Icons.sync),
-          onPressed: selectedFolderIds.isEmpty
-              ? null
-              : () async => await getNotifier().syncMulti(selectedFolderIds),
+          onPressed: selectedFolderIds.isEmpty ? null : syncSelectedFolders,
           label: const Text("Sync"),
         ),
       ],

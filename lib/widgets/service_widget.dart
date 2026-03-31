@@ -22,14 +22,12 @@ class ServiceWidget extends ConsumerWidget {
       _ => Icons.wifi,
     };
     return Card(
-      child: InkWell(
+      child: ListTile(
         onTap: onTap,
-        child: ListTile(
-          leading: Icon(iconData),
-          title: Text(service.name),
-          subtitle: Text('OS: $os, Host: $host, Port: $port'),
-          trailing: const Icon(Icons.chevron_right),
-        ),
+        leading: Icon(iconData),
+        title: Text(service.name),
+        subtitle: Text('OS: $os, Host: $host, Port: $port'),
+        trailing: const Icon(Icons.chevron_right),
       ),
     );
   }
