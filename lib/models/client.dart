@@ -49,7 +49,8 @@ Future<Map<String, Null>> getFiles(String dirPath) async {
   return files;
 }
 
-Future<bool> requestStoragePermission() async {
+Future<bool> requestPermissions() async {
+  await Permission.notification.request();
   // Request storage permission
   var status = await Permission.manageExternalStorage.request();
 
@@ -121,13 +122,13 @@ Future<bool> syncRemoteFolder(
   print(excludeFiles);
   final filename = "${remoteFolder.id}.zip";
   print(remoteFolder.id);
-  final hasPermission = await requestStoragePermission();
+  final hasPermission = await requestPermissions();
   if (!hasPermission) return false;
 
   final task = DownloadTask(
     url:
         "http://$host:${DefaultAppService.port}/shared-folders/${remoteFolder.id}/sync",
-
+    displayName: remoteFolder.name,
     post: excludeFiles,
     filename: filename,
     baseDirectory: BaseDirectory.temporary,
@@ -141,7 +142,7 @@ Future<bool> syncRemoteFolder(
     if (onExtractionStarted != null) onExtractionStarted();
     final zipPath = await task.filePath();
     print(zipPath);
-    final hasPermission = await requestStoragePermission();
+    final hasPermission = await requestPermissions();
     if (!hasPermission) return false;
     final bool extracted = await extractZipFile(zipPath, remoteFolder.path);
     if (onExtractionFinished != null) onExtractionFinished();

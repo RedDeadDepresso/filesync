@@ -1,3 +1,4 @@
+import 'package:background_downloader/background_downloader.dart';
 import 'package:filesync/models/app_service.dart';
 import 'package:filesync/models/server.dart';
 import 'package:filesync/router/router.dart';
@@ -15,6 +16,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DefaultAppService.initialize();
+  FileDownloader().configureNotification(
+    running: const TaskNotification(
+      'Download {displayName}',
+      'File: {filename} - {progress} - speed {networkSpeed} and {timeRemaining} remaining',
+    ),
+    complete: const TaskNotification(
+      'Download {displayName}',
+      'Download complete',
+    ),
+    error: const TaskNotification('Download {displayName}', 'Download failed'),
+    paused: const TaskNotification('Download {displayName}', 'Paused'),
+    canceled: const TaskNotification('Download {displayName}', 'Canceled'),
+    progressBar: true,
+  );
   startBackgroundServer();
   runApp(const ProviderScope(child: FileSyncMainWidget()));
 }
