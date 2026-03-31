@@ -1,9 +1,11 @@
 import 'package:bonsoir/bonsoir.dart';
 import 'package:filesync/models/app_service.dart';
 import 'package:filesync/models/discovery.dart';
+import 'package:filesync/router/router.dart';
 import 'package:filesync/widgets/service_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Displays the current discoveries.
 class NearbyDevicesPageWidget extends ConsumerWidget {
@@ -86,7 +88,11 @@ class _DiscoveryTypeWidgetState extends ConsumerState<_DiscoveryTypeWidget>
     return ListView(
       children: [
         for (BonsoirService service in discoveryState.value!.services)
-          ServiceWidget(service: service),
+          ServiceWidget(
+            service: service,
+            onTap: () =>
+                context.push(Routes.nestedNearbyDevice, extra: service),
+          ),
       ],
     );
   }

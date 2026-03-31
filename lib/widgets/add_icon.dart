@@ -3,15 +3,16 @@ import 'package:filesync/providers/database_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Adds a broadcast or a discovery.
 class AddIcon extends ConsumerWidget {
-  /// Creates a new "Add" icon instance.
   const AddIcon({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => IconButton(
     onPressed: () async {
-      (String, String)? result = await FolderPromptDialog.prompt(context);
+      (String, String)? result = await FolderPromptDialog.prompt(
+        context,
+        "Add a shared folder",
+      );
       if (result != null && result.$1 != '' && result.$2 != '') {
         final db = ref.watch(databaseProvider);
         db.managers.sharedFolders.create(

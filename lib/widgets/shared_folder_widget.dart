@@ -1,27 +1,44 @@
 import 'package:filesync/models/database.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Allows to display a discovered service.
-class SharedFolderWidget extends ConsumerWidget {
-  /// The discovered service.
+class SharedFolderWidget extends StatelessWidget {
   final SharedFolder folder;
+  final bool? isSelected;
+  final Function(bool?)? onChanged;
+  final Function()? onView;
+  final Function()? onEdit;
+  final Function()? onDelete;
 
-  /// The trailing widget.
-  final Widget? trailing;
-
-  /// Creates a new service widget.
-  const SharedFolderWidget({super.key, required this.folder, this.trailing});
+  const SharedFolderWidget({
+    super.key,
+    required this.folder,
+    this.isSelected = false,
+    this.onView,
+    this.onChanged,
+    this.onEdit,
+    this.onDelete,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Card(
-      child: ListTile(
-        leading: Icon(Icons.folder),
+      child: CheckboxListTile(
         title: Text(folder.name),
         subtitle: Text(folder.path),
-        trailing: trailing,
-        isThreeLine: true,
+        secondary: PopupMenuButton(
+          itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+            PopupMenuItem(onTap: onView, child: Text('View')),
+            PopupMenuItem(onTap: onEdit, child: Text('Edit')),
+            PopupMenuItem(
+              onTap: onDelete,
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+        value: isSelected,
+        enabled: folder.path.isNotEmpty,
+        controlAffinity: ListTileControlAffinity.leading,
+        onChanged: onChanged,
       ),
     );
   }

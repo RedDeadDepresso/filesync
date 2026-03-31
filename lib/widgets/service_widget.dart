@@ -1,27 +1,13 @@
 import 'package:bonsoir/bonsoir.dart';
 import 'package:filesync/models/app_service.dart';
-import 'package:filesync/router/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-/// Allows to display a discovered service.
 class ServiceWidget extends ConsumerWidget {
-  /// The discovered service.
   final BonsoirService service;
+  final void Function()? onTap;
 
-  /// The trailing widget.
-  final Widget? trailing;
-
-  final bool navigate;
-
-  /// Creates a new service widget.
-  const ServiceWidget({
-    super.key,
-    required this.service,
-    this.trailing,
-    this.navigate = true,
-  });
+  const ServiceWidget({super.key, required this.service, this.onTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -46,30 +32,17 @@ class ServiceWidget extends ConsumerWidget {
       'Windows' || 'Linux' => Icons.monitor,
       _ => Icons.wifi,
     };
-
-    if (navigate) {
-      return Card(
-        child: InkWell(
-          onTap: () => context.push(Routes.nestedNearbyDevice, extra: service),
-          child: ListTile(
-            leading: Icon(iconData),
-            title: Text(service.name),
-            subtitle: Text(subtitle),
-            trailing: trailing,
-            isThreeLine: true,
-          ),
-        ),
-      );
-    } else {
-      return Card(
+    return Card(
+      child: InkWell(
+        onTap: onTap,
         child: ListTile(
           leading: Icon(iconData),
           title: Text(service.name),
           subtitle: Text(subtitle),
-          trailing: trailing,
+          trailing: const Icon(Icons.chevron_right),
           isThreeLine: true,
         ),
-      );
-    }
+      ),
+    );
   }
 }
