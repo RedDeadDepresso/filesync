@@ -14,7 +14,7 @@ class AddIcon extends ConsumerWidget {
         "Add a shared folder",
       );
       if (result != null && result.$1 != '' && result.$2 != '') {
-        final db = ref.watch(databaseProvider);
+        final db = ref.read(databaseProvider);
         db.managers.sharedFolders.create(
           (f) => f(name: result.$1, path: result.$2),
         );

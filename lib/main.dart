@@ -25,6 +25,18 @@ class FileSyncMainWidget extends StatelessWidget {
   const FileSyncMainWidget({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      MaterialApp.router(routerConfig: router);
+  Widget build(BuildContext context) => MaterialApp.router(
+    routerConfig: router,
+    theme: ThemeData(
+      brightness: Brightness.light,
+      primarySwatch: Colors.blue,
+      useMaterial3: true,
+    ),
+    darkTheme: ThemeData(
+      brightness: Brightness.dark,
+      primarySwatch: Colors.indigo,
+      useMaterial3: true,
+    ),
+    themeMode: ThemeMode.system,
+  );
 }
