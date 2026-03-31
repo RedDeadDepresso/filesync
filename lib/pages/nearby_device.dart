@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:bonsoir/bonsoir.dart';
 import 'package:filesync/providers/remote_folders_provider.dart';
+import 'package:filesync/utils/open_folder.dart';
 import 'package:filesync/widgets/loading_card.dart';
 import 'package:filesync/widgets/remote_folder_widget.dart';
 import 'package:flutter/material.dart';
@@ -39,13 +38,7 @@ class _NearbyDevicePageWidgetState
   Future<void> view(String folderId) async {
     final folder = getNotifier().getRemoteFolder(folderId);
     if (folder == null) return;
-    if (Platform.isWindows) {
-      Process.run('explorer', [folder.path]);
-    } else if (Platform.isMacOS) {
-      Process.run('open', [folder.path]);
-    } else if (Platform.isLinux) {
-      Process.run('xdg-open', [folder.path]);
-    }
+    openFolder(folder.path);
   }
 
   Future<void> sync(String folderId) async {

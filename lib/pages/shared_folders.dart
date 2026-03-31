@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
 import 'package:filesync/dialogs/folder_prompt.dart';
 import 'package:filesync/models/database.dart';
 import 'package:filesync/providers/database_provider.dart';
 import 'package:filesync/providers/shared_folders_provider.dart';
+import 'package:filesync/utils/open_folder.dart';
 import 'package:filesync/widgets/add_icon.dart';
 import 'package:filesync/widgets/loading_card.dart';
 import 'package:filesync/widgets/shared_folder_widget.dart';
@@ -39,13 +38,7 @@ class SharedFoldersPageWidgetState
     final folder = await db.managers.sharedFolders
         .filter((f) => f.id.equals(folderId))
         .getSingle();
-    if (Platform.isWindows) {
-      Process.run('explorer', [folder.path]);
-    } else if (Platform.isMacOS) {
-      Process.run('open', [folder.path]);
-    } else if (Platform.isLinux) {
-      Process.run('xdg-open', [folder.path]);
-    }
+    openFolder(folder.path);
   }
 
   Future<void> edit(String folderId) async {
