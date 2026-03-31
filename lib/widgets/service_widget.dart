@@ -9,24 +9,13 @@ class ServiceWidget extends ConsumerWidget {
 
   const ServiceWidget({super.key, required this.service, this.onTap});
 
+  String get os => service.attributes[DefaultAppService.attributeOs] ?? "";
+  String get host => service.host ?? "";
+  String get port => service.port.toString();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    String subtitle = '';
-    for (MapEntry<String, String> entry in service.attributes.entries) {
-      String key = entry.key;
-      if (key == DefaultAppService.attributeOs) {
-        key = 'OS';
-      } else if (key == DefaultAppService.attributeUuid) {
-        key = 'UUID';
-      }
-      subtitle += '${subtitle.isEmpty ? '' : ', '}$key : ${entry.value}';
-    }
-
-    if (service.host != null) {
-      subtitle += '\nHost : ${service.host}, port : ${service.port}';
-    }
-
-    IconData iconData = switch (DefaultAppService.attributeOs) {
+    IconData iconData = switch (os) {
       'Android' => Icons.android,
       'iOS' || 'macOS' => Icons.apple,
       'Windows' || 'Linux' => Icons.monitor,
@@ -38,9 +27,8 @@ class ServiceWidget extends ConsumerWidget {
         child: ListTile(
           leading: Icon(iconData),
           title: Text(service.name),
-          subtitle: Text(subtitle),
+          subtitle: Text('OS: $os, Host: $host, Port: $port'),
           trailing: const Icon(Icons.chevron_right),
-          isThreeLine: true,
         ),
       ),
     );
