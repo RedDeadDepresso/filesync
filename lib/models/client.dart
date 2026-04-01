@@ -118,12 +118,14 @@ Future<bool> syncRemoteFolder(
   if (host == null) {
     return false;
   }
+
+  final hasPermission = await requestPermissions();
+  if (!hasPermission) return false;
+
   final excludeFiles = await getFiles(remoteFolder.path);
   print(excludeFiles);
   final filename = "${remoteFolder.id}.zip";
   print(remoteFolder.id);
-  final hasPermission = await requestPermissions();
-  if (!hasPermission) return false;
 
   final task = DownloadTask(
     url:
@@ -132,21 +134,9 @@ Future<bool> syncRemoteFolder(
     post: excludeFiles,
     filename: filename,
     baseDirectory: BaseDirectory.temporary,
+    group: host,
+    metaData: remoteFolder.id,
+    updates: Updates.statusAndProgress,
   );
-  final result = await FileDownloader().download(
-    task,
-    onProgress: onDownloadProgress,
-  );
-  print(result.status);
-  if (result.status == TaskStatus.complete) {
-    if (onExtractionStarted != null) onExtractionStarted();
-    final zipPath = await task.filePath();
-    print(zipPath);
-    final hasPermission = await requestPermissions();
-    if (!hasPermission) return false;
-    final bool extracted = await extractZipFile(zipPath, remoteFolder.path);
-    if (onExtractionFinished != null) onExtractionFinished();
-    return extracted;
-  }
-  return false;
+  return await FileDownloader().enqueue(task);
 }

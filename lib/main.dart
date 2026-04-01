@@ -16,20 +16,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DefaultAppService.initialize();
-  FileDownloader().configureNotification(
-    running: const TaskNotification(
-      'Download {displayName}',
-      'File: {filename} - {progress} - speed {networkSpeed} and {timeRemaining} remaining',
-    ),
-    complete: const TaskNotification(
-      'Download {displayName}',
-      'Download complete',
-    ),
-    error: const TaskNotification('Download {displayName}', 'Download failed'),
-    paused: const TaskNotification('Download {displayName}', 'Paused'),
-    canceled: const TaskNotification('Download {displayName}', 'Canceled'),
-    progressBar: true,
-  );
+  FileDownloader()
+      .configureNotification(
+        running: const TaskNotification(
+          'Download {displayName}',
+          'File: {filename} - {progress} - speed {networkSpeed} and {timeRemaining} remaining',
+        ),
+        complete: const TaskNotification(
+          'Download {displayName}',
+          'Download complete',
+        ),
+        error: const TaskNotification(
+          'Download {displayName}',
+          'Download failed',
+        ),
+        paused: const TaskNotification('Download {displayName}', 'Paused'),
+        canceled: const TaskNotification('Download {displayName}', 'Canceled'),
+        progressBar: true,
+      );
+      // Max downloads by host set to 1
   startBackgroundServer();
   runApp(const ProviderScope(child: FileSyncMainWidget()));
 }

@@ -26,44 +26,48 @@ class RemoteFolderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (remoteFolder.isDownloading || remoteFolder.isExtracting) {
-      final String status = remoteFolder.isDownloading
-          ? "Downloading"
-          : "Extracting";
+    String title = remoteFolder.name;
+    if (remoteFolder.status != RemoteFolderStatus.start) {
+      title += " - ${remoteFolder.status.label}";
+    }
+    if (remoteFolder.status.editable) {
       return Card(
-        child: ListTile(
-          leading:
-              remoteFolder.isDownloading &&
-                  (0.0 < remoteFolder.downloadProgress &&
-                      remoteFolder.downloadProgress < 1.0)
-              ? CircularProgressIndicator(value: remoteFolder.downloadProgress)
-              : CircularProgressIndicator(),
-          title: Text("${remoteFolder.name} - $status"),
+        child: CheckboxListTile(
+          title: Text(title),
           subtitle: Text(remoteFolder.path),
+          secondary: remoteFolder.path.isEmpty
+              ? TextButton(onPressed: onLink, child: const Text("Link"))
+              : PopupMenuButton(
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                    PopupMenuItem(onTap: onSync, child: Text('Sync')),
+                    PopupMenuItem(onTap: onView, child: Text('View')),
+                    PopupMenuItem(onTap: onLink, child: Text('Link')),
+                    PopupMenuItem(
+                      onTap: onUnlink,
+                      child: Text(
+                        'Unlink',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+          value: isSelected,
+          enabled: remoteFolder.path.isNotEmpty,
+          controlAffinity: ListTileControlAffinity.leading,
+          onChanged: onChanged,
         ),
       );
     }
     return Card(
-      child: CheckboxListTile(
-        title: Text(remoteFolder.name),
-        subtitle: remoteFolder.path.isEmpty ? null : Text(remoteFolder.path),
-        secondary: remoteFolder.path.isEmpty
-            ? TextButton(onPressed: onLink, child: const Text("Link"))
-            : PopupMenuButton(
-                itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                  PopupMenuItem(onTap: onSync, child: Text('Sync')),
-                  PopupMenuItem(onTap: onView, child: Text('View')),
-                  PopupMenuItem(onTap: onLink, child: Text('Link')),
-                  PopupMenuItem(
-                    onTap: onUnlink,
-                    child: Text('Unlink', style: TextStyle(color: Colors.red)),
-                  ),
-                ],
-              ),
-        value: isSelected,
-        enabled: remoteFolder.path.isNotEmpty,
-        controlAffinity: ListTileControlAffinity.leading,
-        onChanged: onChanged,
+      child: ListTile(
+        leading:
+            remoteFolder.status == RemoteFolderStatus.downloading &&
+                (0.0 < remoteFolder.downloadProgress &&
+                    remoteFolder.downloadProgress < 1.0)
+            ? CircularProgressIndicator(value: remoteFolder.downloadProgress)
+            : CircularProgressIndicator(),
+        title: Text(title),
+        subtitle: Text(remoteFolder.path),
       ),
     );
   }

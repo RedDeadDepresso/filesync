@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:core';
 
+import 'package:background_downloader/background_downloader.dart';
 import 'package:drift/drift.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:filesync/models/client.dart';
@@ -16,6 +17,11 @@ class RemoteFoldersNotifier extends AsyncNotifier<Map<String, RemoteFolder>> {
 
   @override
   FutureOr<Map<String, RemoteFolder>> build() async {
+    FileDownloader().registerCallbacks(
+      group: host,
+      taskProgressCallback: _handleDownloadProgress,
+      taskStatusCallback: _handleDownloadStatus,
+    );
     final db = ref.read(databaseProvider);
     final remoteFolders = await fetchRemoteFolders(host);
     final syncedFolders = await db.managers.syncedFolders
@@ -37,9 +43,8 @@ class RemoteFoldersNotifier extends AsyncNotifier<Map<String, RemoteFolder>> {
     for (RemoteFolder oldFolder in state.value!.values) {
       final remoteFolder = remoteFolders[oldFolder.id];
       if (remoteFolder != null) {
-        remoteFolder.isDownloading = oldFolder.isDownloading;
+        remoteFolder.status = oldFolder.status;
         remoteFolder.downloadProgress = oldFolder.downloadProgress;
-        remoteFolder.isExtracting = oldFolder.isDownloading;
         remoteFolder.path = oldFolder.path;
       }
     }
@@ -104,21 +109,18 @@ class RemoteFoldersNotifier extends AsyncNotifier<Map<String, RemoteFolder>> {
   Future<void> _sync(String folderId) async {
     final remoteFolder = getRemoteFolder(folderId);
     if (remoteFolder != null && remoteFolder.path.isNotEmpty) {
-      await syncRemoteFolder(
-        host,
-        remoteFolder,
-        onDownloadProgress: (double progress) =>
-            (_onDownloadProgress(folderId, progress)),
-        onExtractionStarted: () => (_onExtractionStarted(folderId)),
-        onExtractionFinished: () => (_onExtractionFinished(folderId)),
-      );
+      final enqueued = await syncRemoteFolder(host, remoteFolder);
+      if (!enqueued) {
+        remoteFolder.status = RemoteFolderStatus.failed;
+        _updateState();
+      }
     }
   }
 
   Future<void> sync(String folderId) async {
     final folder = getRemoteFolder(folderId);
     if (folder == null) return;
-    folder.isDownloading = true;
+    folder.status = RemoteFolderStatus.enqueued;
     _updateState();
     await _sync(folderId);
   }
@@ -126,7 +128,7 @@ class RemoteFoldersNotifier extends AsyncNotifier<Map<String, RemoteFolder>> {
   Future<void> syncMulti(Iterable<String> folderIds) async {
     for (String folderId in folderIds) {
       final folder = getRemoteFolder(folderId);
-      if (folder != null) folder.isDownloading = true;
+      if (folder != null) folder.status = RemoteFolderStatus.enqueued;
     }
     _updateState();
     for (String folderId in folderIds) {
@@ -134,35 +136,44 @@ class RemoteFoldersNotifier extends AsyncNotifier<Map<String, RemoteFolder>> {
     }
   }
 
-  void _onDownloadProgress(String folderId, double progress) {
-    print(progress);
-    final folder = getRemoteFolder(folderId);
+  void _handleDownloadProgress(TaskProgressUpdate update) {
+    print("Progress: ${update.progress}");
+    final folder = getRemoteFolder(update.task.metaData);
     if (folder == null) return;
-    if (progress == 1.0) {
-      folder.isDownloading = false;
+    folder.status = RemoteFolderStatus.downloading;
+    folder.downloadProgress = update.progress;
+    _updateState();
+  }
+
+  void _handleDownloadStatus(TaskStatusUpdate update) {
+    final folder = getRemoteFolder(update.task.metaData);
+    if (folder == null) return;
+    if (update.status == TaskStatus.complete) {
+      folder.status = RemoteFolderStatus.extracting;
+      _updateState();
+      _extract(folder, update.task);
+    } else if (update.status == TaskStatus.canceled ||
+        update.status == TaskStatus.failed ||
+        update.status == TaskStatus.notFound) {
+      folder.status = RemoteFolderStatus.failed;
+      _updateState();
+    }
+  }
+
+  Future<bool> _extract(RemoteFolder folder, Task task) async {
+    bool success = false;
+    final hasPermission = await requestPermissions();
+    if (hasPermission) {
+      final zipPath = await task.filePath();
+      success = await extractZipFile(zipPath, folder.path);
+    }
+    if (success) {
+      folder.status = RemoteFolderStatus.synced;
     } else {
-      folder.isDownloading = true;
-      folder.downloadProgress = progress;
+      folder.status = RemoteFolderStatus.failed;
     }
     _updateState();
-  }
-
-  void _onExtractionStarted(String folderId) {
-    print("extraction started");
-    final folder = getRemoteFolder(folderId);
-    if (folder == null) return;
-    folder.isDownloading = false;
-    folder.isExtracting = true;
-    _updateState();
-  }
-
-  void _onExtractionFinished(String folderId) {
-    print("extraction finished");
-
-    final folder = getRemoteFolder(folderId);
-    if (folder == null) return;
-    folder.isExtracting = false;
-    _updateState();
+    return success;
   }
 
   void _setRemoteFolderPath(String folderId, String newPath) {
