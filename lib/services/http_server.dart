@@ -1,26 +1,30 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
+
+import 'package:archive/archive_io.dart';
 import 'package:drift/native.dart';
+import 'package:filesync/constants.dart';
 import 'package:filesync/models/database.dart';
 import 'package:filesync/utils/normalize_path.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
-import 'package:shelf/shelf.dart';
-import 'dart:isolate';
-import 'package:archive/archive_io.dart';
-import 'dart:async';
 
-void startBackgroundServer() async {
+/// Spawns the HTTP server in a background isolate.
+Future<void> startBackgroundServer() async {
   final supportDir = await getApplicationSupportDirectory();
   final tempDir = await getApplicationCacheDirectory();
   await Isolate.spawn(_serverMain, [supportDir.path, tempDir.path]);
 }
 
+/// Builds a zip of [dirPath], excluding files in [excludePaths], writing
+/// a temp file under [tempPath]. Returns the zip bytes and their length.
 Future<(List<int>, int)> buildZip(
   String dirPath,
-  Map<String, dynamic> excludePaths,
+  Set<String> excludePaths,
   String tempPath,
 ) async {
   final tempFile = File(
@@ -36,12 +40,12 @@ Future<(List<int>, int)> buildZip(
       final relativePath = normalizePath(
         p.relative(entity.path, from: dirPath),
       );
-      if (excludePaths.containsKey(relativePath)) continue;
+      if (excludePaths.contains(relativePath)) continue;
       await encoder.addFile(entity, relativePath);
     }
     await encoder.close();
 
-    final bytes = await tempFile.readAsBytes(); // read fully before delete
+    final bytes = await tempFile.readAsBytes();
     return (bytes, bytes.length);
   } finally {
     await Future.delayed(const Duration(milliseconds: 100));
@@ -51,20 +55,20 @@ Future<(List<int>, int)> buildZip(
   }
 }
 
-void _serverMain(List args) async {
+void _serverMain(List<dynamic> args) async {
   final supportPath = args[0] as String;
   final tempPath = args[1] as String;
 
-  final dbFile = File(p.join(supportPath, "my_database.sqlite"));
-
+  final dbFile = File(
+    p.join(supportPath, AppConstants.databaseName),
+  );
   final db = AppDatabase(NativeDatabase(dbFile));
 
-  var app = Router();
+  final app = Router();
 
-  // Define a simple route
   app.get('/shared-folders', (Request request) async {
     final folders = await db.managers.sharedFolders.get();
-    final data = {for (var f in folders) f.id: f.name};
+    final data = {for (final f in folders) f.id: f.name};
     return Response.ok(
       jsonEncode(data),
       headers: {'content-type': 'application/json'},
@@ -73,18 +77,40 @@ void _serverMain(List args) async {
 
   app.post('/shared-folders/<id>/sync', (Request request, String id) async {
     try {
-      final payload = await request.readAsString();
-      Map<String, dynamic> data = {};
-      if (payload.isNotEmpty) data = jsonDecode(payload);
-
-      final folder = await db.managers.sharedFolders
+      // Validate the folder exists before doing any work.
+      final folders = await db.managers.sharedFolders
           .filter((f) => f.id.equals(id))
-          .getSingle();
+          .get();
 
-      final (bytes, fileSize) = await buildZip(folder.path, data, tempPath);
+      if (folders.isEmpty) {
+        return Response.notFound('Folder not found');
+      }
+      final folder = folders.first;
+
+      // Parse exclude list; treat any malformed body as empty.
+      Set<String> excludePaths = {};
+      try {
+        final payload = await request.readAsString();
+        if (payload.isNotEmpty) {
+          final decoded = jsonDecode(payload);
+          if (decoded is List) {
+            excludePaths = Set<String>.from(decoded.whereType<String>());
+          } else if (decoded is Map) {
+            excludePaths = Set<String>.from(decoded.keys.whereType<String>());
+          }
+        }
+      } catch (_) {
+        // Malformed body — proceed with no exclusions.
+      }
+
+      final (bytes, fileSize) = await buildZip(
+        folder.path,
+        excludePaths,
+        tempPath,
+      );
 
       return Response.ok(
-        bytes, // shelf accepts List<int> directly
+        bytes,
         headers: {
           'Content-Type': 'application/zip',
           'Content-Disposition': 'attachment; filename="$id.zip"',
@@ -92,9 +118,15 @@ void _serverMain(List args) async {
         },
       );
     } catch (e, st) {
-      print("SERVER ERROR: $e\n$st");
-      return Response.internalServerError(body: e.toString());
+      // ignore: avoid_print
+      print('SERVER ERROR: $e\n$st');
+      return Response.internalServerError(body: 'Internal server error');
     }
   });
-  await shelf_io.serve(app.call, InternetAddress.anyIPv4, 4000);
+
+  await shelf_io.serve(
+    app.call,
+    InternetAddress.anyIPv4,
+    AppConstants.serverPort,
+  );
 }

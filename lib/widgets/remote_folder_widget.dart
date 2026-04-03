@@ -27,8 +27,8 @@ class RemoteFolderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String title = remoteFolder.name;
-    if (remoteFolder.status != RemoteFolderStatus.start) {
-      title += " - ${remoteFolder.status.label}";
+    if (remoteFolder.status != RemoteFolderStatus.idle) {
+      title += ' - ${remoteFolder.status.label}';
     }
     if (remoteFolder.status.editable) {
       return Card(
@@ -36,7 +36,7 @@ class RemoteFolderWidget extends StatelessWidget {
           title: Text(title),
           subtitle: Text(remoteFolder.path),
           secondary: remoteFolder.path.isEmpty
-              ? TextButton(onPressed: onLink, child: const Text("Link"))
+              ? TextButton(onPressed: onLink, child: const Text('Link'))
               : PopupMenuButton(
                   itemBuilder: (BuildContext context) => <PopupMenuEntry>[
                     PopupMenuItem(onTap: onSync, child: Text('Sync')),
@@ -60,12 +60,11 @@ class RemoteFolderWidget extends StatelessWidget {
     }
     return Card(
       child: ListTile(
-        leading:
-            remoteFolder.status == RemoteFolderStatus.downloading &&
-                (0.0 < remoteFolder.downloadProgress &&
-                    remoteFolder.downloadProgress < 1.0)
+        leading: remoteFolder.status == RemoteFolderStatus.downloading &&
+                remoteFolder.downloadProgress > 0.0 &&
+                remoteFolder.downloadProgress < 1.0
             ? CircularProgressIndicator(value: remoteFolder.downloadProgress)
-            : CircularProgressIndicator(),
+            : const CircularProgressIndicator(),
         title: Text(title),
         subtitle: Text(remoteFolder.path),
       ),

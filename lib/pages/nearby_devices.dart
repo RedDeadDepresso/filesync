@@ -1,5 +1,5 @@
 import 'package:bonsoir/bonsoir.dart';
-import 'package:filesync/models/app_service.dart';
+import 'package:filesync/constants.dart';
 import 'package:filesync/models/discovery.dart';
 import 'package:filesync/router/router.dart';
 import 'package:filesync/widgets/service_widget.dart';
@@ -15,10 +15,10 @@ class NearbyDevicesPageWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: Text("Nearby Devices")),
+      appBar: AppBar(title: const Text('Nearby Devices')),
       body: Padding(
         padding: const EdgeInsets.all(10),
-        child: _DiscoveryTypeWidget(type: DefaultAppService.serviceType),
+        child: _DiscoveryTypeWidget(type: AppConstants.serviceType),
       ),
     );
   }
@@ -41,7 +41,7 @@ class _DiscoveryTypeWidget extends ConsumerStatefulWidget {
 class _DiscoveryTypeWidgetState extends ConsumerState<_DiscoveryTypeWidget>
     with AutomaticKeepAliveClientMixin<_DiscoveryTypeWidget> {
   @override
-  bool wantKeepAlive = false;
+  bool wantKeepAlive = true;
 
   @override
   void initState() {

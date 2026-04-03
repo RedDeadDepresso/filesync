@@ -1,8 +1,6 @@
 name: filesync
-description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+description: "A LAN file sync app — share and sync folders between nearby devices."
+publish_to: 'none'
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -46,7 +44,6 @@ dependencies:
   shelf: ^1.4.2
   shelf_router: ^1.1.4
   go_router: ^17.1.0
-  flutter_archive: ^6.0.4
   background_downloader: ^9.5.4
   path: ^1.9.1
   archive: ^4.0.9

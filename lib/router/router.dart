@@ -7,10 +7,10 @@ import 'package:go_router/go_router.dart';
 
 class Routes {
   // Optional: full paths (for reference/navigation)
-  static const String nearbyDevices = "/nearby-devices";
-  static const String nearbyDevice = "nearby-device";
-  static const String nestedNearbyDevice = "/nearby-devices/nearby-device";
-  static const String sharedFolders = "/shared-folders";
+  static const String nearbyDevices = '/nearby-devices';
+  static const String nearbyDevice = 'nearby-device';
+  static const String nestedNearbyDevice = '/nearby-devices/nearby-device';
+  static const String sharedFolders = '/shared-folders';
 }
 
 final router = GoRouter(

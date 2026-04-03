@@ -1,5 +1,4 @@
-import 'package:filesync/models/destionation.dart';
-import 'package:filesync/widgets/add_icon.dart';
+import 'package:filesync/models/destination.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,11 +14,7 @@ class LayoutScaffold extends StatelessWidget {
     if (isDesktop) {
       // Sidebar layout
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('FileSync'),
-          centerTitle: false,
-          actions: navigationShell.currentIndex == 1 ? [AddIcon()] : [],
-        ),
+        appBar: AppBar(title: const Text('FileSync'), centerTitle: false),
         body: Row(
           children: [
             NavigationRail(

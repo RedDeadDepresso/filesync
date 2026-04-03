@@ -11,7 +11,7 @@ class AddIcon extends ConsumerWidget {
     onPressed: () async {
       (String, String)? result = await FolderPromptDialog.prompt(
         context,
-        "Add a shared folder",
+        'Add a shared folder',
       );
       if (result != null && result.$1 != '' && result.$2 != '') {
         final db = ref.read(databaseProvider);

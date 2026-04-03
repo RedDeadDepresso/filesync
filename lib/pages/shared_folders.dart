@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart';
 import 'package:filesync/dialogs/folder_prompt.dart';
-import 'package:filesync/models/database.dart';
 import 'package:filesync/providers/database_provider.dart';
 import 'package:filesync/providers/shared_folders_provider.dart';
 import 'package:filesync/utils/open_folder.dart';
@@ -14,26 +13,25 @@ class SharedFoldersPageWidget extends ConsumerStatefulWidget {
   const SharedFoldersPageWidget({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
-      SharedFoldersPageWidgetState();
+  ConsumerState<SharedFoldersPageWidget> createState() =>
+      _SharedFoldersPageWidgetState();
 }
 
-class SharedFoldersPageWidgetState
+class _SharedFoldersPageWidgetState
     extends ConsumerState<SharedFoldersPageWidget> {
-  final Set<String> selectedFolderIds = {};
+  final Set<String> _selectedFolderIds = {};
 
-  void updateSelectedFolder(String folderId, bool? add) {
-    if (add == true) {
-      selectedFolderIds.add(folderId);
-    } else {
-      selectedFolderIds.remove(folderId);
-    }
+  void _updateSelectedFolder(String folderId, bool? add) {
     setState(() {
-      selectedFolderIds;
+      if (add == true) {
+        _selectedFolderIds.add(folderId);
+      } else {
+        _selectedFolderIds.remove(folderId);
+      }
     });
   }
 
-  Future<void> view(String folderId) async {
+  Future<void> _view(String folderId) async {
     final db = ref.read(databaseProvider);
     final folder = await db.managers.sharedFolders
         .filter((f) => f.id.equals(folderId))
@@ -41,7 +39,7 @@ class SharedFoldersPageWidgetState
     openFolder(folder.path);
   }
 
-  Future<void> edit(String folderId) async {
+  Future<void> _edit(String folderId) async {
     final db = ref.read(databaseProvider);
     final folder = await db.managers.sharedFolders
         .filter((f) => f.id.equals(folderId))
@@ -51,32 +49,31 @@ class SharedFoldersPageWidgetState
 
     final result = await FolderPromptDialog.prompt(
       context,
-      "Edit Folder",
+      'Edit Folder',
       initialName: folder.name,
       initialPath: folder.path,
     );
-    if (result != null && result.$1 != '' && result.$2 != '') {
-      final db = ref.read(databaseProvider);
+    if (result != null && result.$1.isNotEmpty && result.$2.isNotEmpty) {
       await db.managers.sharedFolders
           .filter((f) => f.id.equals(folder.id))
           .update((f) => f(name: Value(result.$1), path: Value(result.$2)));
     }
   }
 
-  Future<void> delete(String folderId) async {
+  Future<void> _delete(String folderId) async {
     final db = ref.read(databaseProvider);
     await db.managers.sharedFolders
         .filter((k) => k.id.equals(folderId))
         .delete();
-    selectedFolderIds.remove(folderId);
+    setState(() => _selectedFolderIds.remove(folderId));
   }
 
-  Future<void> deleteSelected() async {
+  Future<void> _deleteSelected() async {
     final db = ref.read(databaseProvider);
     await db.managers.sharedFolders
-        .filter((k) => k.id.isIn(selectedFolderIds))
+        .filter((k) => k.id.isIn(_selectedFolderIds))
         .delete();
-    selectedFolderIds.clear();
+    setState(() => _selectedFolderIds.clear());
   }
 
   @override
@@ -84,9 +81,12 @@ class SharedFoldersPageWidgetState
     final foldersAsync = ref.watch(sharedFoldersProvider);
     final folders = foldersAsync.value;
     return Scaffold(
-      appBar: AppBar(title: Text("Shared Folders"), actions: [const AddIcon()]),
+      appBar: AppBar(
+        title: const Text('Shared Folders'),
+        actions: [const AddIcon()],
+      ),
       body: folders == null
-          ? LoadingCard(text: "Loading Shared Folders...")
+          ? const LoadingCard(text: 'Loading Shared Folders...')
           : Center(
               child: ListView(
                 padding: const EdgeInsets.all(10),
@@ -99,15 +99,15 @@ class SharedFoldersPageWidgetState
                       style: TextStyle(fontStyle: FontStyle.italic),
                     )
                   else
-                    for (SharedFolder folder in folders)
+                    for (final folder in folders)
                       SharedFolderWidget(
                         folder: folder,
-                        isSelected: selectedFolderIds.contains(folder.id),
-                        onChanged: (bool? value) =>
-                            updateSelectedFolder(folder.id, value),
-                        onView: () => view(folder.id),
-                        onEdit: () => edit(folder.id),
-                        onDelete: () => delete(folder.id),
+                        isSelected: _selectedFolderIds.contains(folder.id),
+                        onChanged: (value) =>
+                            _updateSelectedFolder(folder.id, value),
+                        onView: () => _view(folder.id),
+                        onEdit: () => _edit(folder.id),
+                        onDelete: () => _delete(folder.id),
                       ),
                 ],
               ),
@@ -115,11 +115,11 @@ class SharedFoldersPageWidgetState
       persistentFooterButtons: [
         OutlinedButton.icon(
           icon: const Icon(Icons.remove),
-          onPressed: selectedFolderIds.isEmpty ? null : deleteSelected,
-          label: const Text("Delete"),
+          onPressed: _selectedFolderIds.isEmpty ? null : _deleteSelected,
+          label: const Text('Delete'),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.red,
-            side: selectedFolderIds.isEmpty
+            side: _selectedFolderIds.isEmpty
                 ? null
                 : const BorderSide(color: Colors.red),
           ),

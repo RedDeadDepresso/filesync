@@ -2,37 +2,26 @@ import 'dart:io';
 
 import 'package:bonsoir/bonsoir.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:filesync/constants.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 
-/// Allows to get the Bonsoir service corresponding to the current device.
-class DefaultAppService {
-  /// The "OS" attribute.
-  static const String attributeOs = 'os';
-
-  /// The "UUID" attribute.
-  static const String attributeUuid = 'uuid';
-
-  /// The "service type" attribute
-  static const String serviceType = '_filesync._tcp';
-
-  /// The "service type" attribute
-  static const int port = 4000;
-
-  /// The default app service.
+/// Manages the mDNS broadcast of this device's FileSync service.
+class AppBroadcastService {
   static late BonsoirService _service;
   static late BonsoirBroadcast _broadcast;
-  // static late BonsoirDiscovery _discovery;
 
-  /// Returns the default app service instance.
+  /// The resolved [BonsoirService] for this device.
   static BonsoirService get service => _service;
-  static BonsoirBroadcast get broadcast => _broadcast;
-  // static BonsoirDiscovery get discovery => _discovery;
 
-  /// Initializes the Bonsoir service instance.
-  static Future initialize() async {
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    String name;
-    String os;
+  /// The active [BonsoirBroadcast] instance.
+  static BonsoirBroadcast get broadcast => _broadcast;
+
+  /// Initialises the service and starts broadcasting on the local network.
+  static Future<void> initialize() async {
+    final deviceInfo = DeviceInfoPlugin();
+    final String name;
+    final String os;
+
     if (Platform.isAndroid) {
       name = (await deviceInfo.androidInfo).model;
       os = 'Android';
@@ -55,17 +44,16 @@ class DefaultAppService {
 
     _service = BonsoirService(
       name: name,
-      type: serviceType,
-      port: port,
-      attributes: {attributeOs: os, attributeUuid: await FlutterUdid.udid},
+      type: AppConstants.serviceType,
+      port: AppConstants.serverPort,
+      attributes: {
+        AppConstants.attributeOs: os,
+        AppConstants.attributeUuid: await FlutterUdid.udid,
+      },
     );
 
     _broadcast = BonsoirBroadcast(service: _service);
     await _broadcast.initialize();
     await _broadcast.start();
-
-    // _discovery = BonsoirDiscovery(type: serviceType);
-    // await discovery.initialize();
-    // await _discovery.start();
   }
 }

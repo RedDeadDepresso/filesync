@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+-e 
+# Drift generated files
+lib/models/database.g.dart

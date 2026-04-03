@@ -1,5 +1,5 @@
 import 'package:bonsoir/bonsoir.dart';
-import 'package:filesync/models/app_service.dart';
+import 'package:filesync/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,8 +9,8 @@ class ServiceWidget extends ConsumerWidget {
 
   const ServiceWidget({super.key, required this.service, this.onTap});
 
-  String get os => service.attributes[DefaultAppService.attributeOs] ?? "";
-  String get host => service.host ?? "";
+  String get os => service.attributes[AppConstants.attributeOs] ?? '';
+  String get host => service.host ?? '';
   String get port => service.port.toString();
 
   @override
