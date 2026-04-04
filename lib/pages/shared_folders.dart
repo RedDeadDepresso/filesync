@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:filesync/dialogs/folder_prompt.dart';
 import 'package:filesync/providers/database_provider.dart';
 import 'package:filesync/providers/shared_folders_provider.dart';
+import 'package:filesync/services/sync_service.dart';
 import 'package:filesync/utils/open_folder.dart';
 import 'package:filesync/widgets/add_icon.dart';
 import 'package:filesync/widgets/loading_card.dart';
@@ -54,6 +55,8 @@ class _SharedFoldersPageWidgetState
       initialPath: folder.path,
     );
     if (result != null && result.$1.isNotEmpty && result.$2.isNotEmpty) {
+      final hasPermission = await requestPermissions();
+      if (!hasPermission) return;
       await db.managers.sharedFolders
           .filter((f) => f.id.equals(folder.id))
           .update((f) => f(name: Value(result.$1), path: Value(result.$2)));

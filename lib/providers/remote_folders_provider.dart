@@ -131,6 +131,16 @@ class RemoteFoldersNotifier extends AsyncNotifier<Map<String, RemoteFolder>> {
   Future<void> _enqueueSyncTask(String folderId) async {
     final folder = getRemoteFolder(folderId);
     if (folder == null || folder.path.isEmpty) return;
+
+    final hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      _updateFolder(
+        folderId,
+        (f) => f.copyWith(status: RemoteFolderStatus.failed),
+      );
+      return;
+    }
+
     final enqueued = await syncRemoteFolder(_host, folder);
     if (!enqueued) {
       _updateFolder(
