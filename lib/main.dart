@@ -2,6 +2,7 @@ import 'package:background_downloader/background_downloader.dart';
 import 'package:filesync/router/router.dart';
 import 'package:filesync/services/app_broadcast_service.dart';
 import 'package:filesync/services/http_server.dart';
+import 'package:filesync/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,10 +18,7 @@ Future<void> main() async {
       'Download {displayName}',
       'Download complete',
     ),
-    error: const TaskNotification(
-      'Download {displayName}',
-      'Download failed',
-    ),
+    error: const TaskNotification('Download {displayName}', 'Download failed'),
     paused: const TaskNotification('Download {displayName}', 'Paused'),
     canceled: const TaskNotification('Download {displayName}', 'Canceled'),
     progressBar: true,
@@ -35,16 +33,8 @@ class FileSyncApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp.router(
     routerConfig: router,
-    theme: ThemeData(
-      brightness: Brightness.light,
-      primarySwatch: Colors.blue,
-      useMaterial3: true,
-    ),
-    darkTheme: ThemeData(
-      brightness: Brightness.dark,
-      primarySwatch: Colors.indigo,
-      useMaterial3: true,
-    ),
+    theme: AppTheme.light,
+    darkTheme: AppTheme.dark,
     themeMode: ThemeMode.system,
   );
 }
