@@ -20,7 +20,7 @@ on:
 
 # ── Shared env ────────────────────────────────────────────────────────────────
 env:
-  FLUTTER_VERSION: '3.32.0'
+  FLUTTER_VERSION: '3.24.0'
   # Set these secrets in your repo → Settings → Secrets and variables → Actions
   # ANDROID_KEYSTORE_BASE64   : base64-encoded JKS/PKCS12 keystore
   # ANDROID_KEY_ALIAS         : key alias inside the keystore
