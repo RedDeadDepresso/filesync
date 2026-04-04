@@ -342,14 +342,11 @@ jobs:
             ### Downloads
             | Platform | File |
             |----------|------|
-            | 🤖 Android APK | `filesync-*-android.apk` or `filesync-*.apk` |
-            | 🤖 Android AAB (Play Store) | `filesync-*.aab` |
-            | 🍎 iOS | `filesync-*.ipa` |
-            | 🪟 Windows | `filesync-*-windows.zip` |
-            | 🐧 Linux | `filesync-*-linux-x64.tar.xz` |
+            | Android APK | `filesync-*-android.apk` or `filesync-*.apk` |
+            | Windows | `filesync-*-windows.zip` |
+            | Linux | `filesync-*-linux-x64.tar.xz` |
 
             ### Notes
             - **Android**: Install the APK directly on your device. The AAB is for Google Play Store submission.
-            - **iOS**: Requires a signed IPA. If built without code-signing secrets, the `.zip` contains an unsigned `.app` for simulator testing only.
             - **Windows**: Extract the zip and run `filesync.exe`.
             - **Linux**: Extract the tarball and run `./filesync`.
