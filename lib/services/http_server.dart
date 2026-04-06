@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
@@ -20,9 +21,12 @@ Future<void> startBackgroundServer() async {
   await Isolate.spawn(_serverMain, [supportDir.path, tempDir.path]);
 }
 
-/// Builds a zip of [dirPath], excluding files in [excludePaths], writing
-/// a temp file under [tempPath]. Returns the zip bytes and their length.
-Future<(List<int>, int)> buildZip(
+/// Builds a zip of [dirPath] (excluding [excludePaths]) into a temp file,
+/// then returns the file's stream and its byte length.
+///
+/// The caller MUST fully consume the stream — the temp file is deleted
+/// automatically once the stream closes (normally or on error).
+Future<(Stream<Object?>, int)> buildZip(
   String dirPath,
   Set<String> excludePaths,
   String tempPath,
@@ -30,38 +34,43 @@ Future<(List<int>, int)> buildZip(
   final tempFile = File(
     p.join(tempPath, '${DateTime.now().millisecondsSinceEpoch}.zip'),
   );
+
   final encoder = ZipFileEncoder();
-  try {
-    encoder.create(tempFile.path);
+  encoder.create(tempFile.path);
 
-    final baseDir = Directory(dirPath);
-    await for (final entity in baseDir.list(recursive: true)) {
-      if (entity is! File) continue;
-      final relativePath = normalizePath(
-        p.relative(entity.path, from: dirPath),
-      );
-      if (excludePaths.contains(relativePath)) continue;
-      await encoder.addFile(entity, relativePath);
-    }
-    await encoder.close();
-
-    final bytes = await tempFile.readAsBytes();
-    return (bytes, bytes.length);
-  } finally {
-    await Future.delayed(const Duration(milliseconds: 100));
-    try {
-      await tempFile.delete();
-    } catch (_) {}
+  final baseDir = Directory(dirPath);
+  await for (final entity in baseDir.list(recursive: true)) {
+    if (entity is! File) continue;
+    final relativePath = normalizePath(p.relative(entity.path, from: dirPath));
+    if (excludePaths.contains(relativePath)) continue;
+    await encoder.addFile(entity, relativePath);
   }
+  await encoder.close();
+
+  final fileSize = await tempFile.length();
+
+  // Stream the file in chunks and delete it once the stream is done.
+  final stream = tempFile.openRead().transform(
+    StreamTransformer.fromHandlers(
+      handleDone: (sink) {
+        sink.close();
+        tempFile.delete().ignore();
+      },
+      handleError: (error, stack, sink) {
+        sink.addError(error, stack);
+        tempFile.delete().ignore();
+      },
+    ),
+  );
+
+  return (stream, fileSize);
 }
 
 void _serverMain(List<dynamic> args) async {
   final supportPath = args[0] as String;
   final tempPath = args[1] as String;
 
-  final dbFile = File(
-    p.join(supportPath, AppConstants.databaseName),
-  );
+  final dbFile = File(p.join(supportPath, AppConstants.databaseName));
   final db = AppDatabase(NativeDatabase(dbFile));
 
   final app = Router();
@@ -103,14 +112,14 @@ void _serverMain(List<dynamic> args) async {
         // Malformed body — proceed with no exclusions.
       }
 
-      final (bytes, fileSize) = await buildZip(
+      final (zipStream, fileSize) = await buildZip(
         folder.path,
         excludePaths,
         tempPath,
       );
 
       return Response.ok(
-        bytes,
+        zipStream,
         headers: {
           'Content-Type': 'application/zip',
           'Content-Disposition': 'attachment; filename="$id.zip"',
