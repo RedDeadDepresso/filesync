@@ -1,6 +1,12 @@
 # FileSync
 
-<img width="1080" height="2400" alt="Screenshot_2026-08-21-15-04-31-086_com example filesync" src="https://github.com/user-attachments/assets/0c164dcf-7724-41e0-bf3a-2e33769659e9" />
+<div align="center">
+
+| Mobile Screen | Desktop Screen |
+| :---: | :---: |
+| <img src="https://github.com/user-attachments/assets/0c164dcf-7724-41e0-bf3a-2e33769659e9" height="350" /> | <img src="https://github.com/user-attachments/assets/2bc4c612-f327-4cc3-8a2f-df5100c84c0b" height="350" /> |
+
+</div>
 
 A cross-platform Flutter app for sharing and syncing folders between nearby devices over a local network — no internet connection or cloud account required.
 
